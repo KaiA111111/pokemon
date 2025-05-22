@@ -16,21 +16,23 @@
   * 5/19        making draw card method
   * 5/20        finished draw card, working on making the hand and checking whether the draw card is valid and the hand contains a basic pokemon
                 also, i converted over to VS code because I can.
+    5/22        
   */
     static internal class Program
     {
         static void writescreen(List<Pokemon> enemyhand, int epoints )
         {
             Console.Clear();
-            Console.WriteLine("Enemy Hand: "enemyhand.Count + "   Points:" + epoints );
+            Console.WriteLine("Enemy Hand: " + enemyhand.Count + "   Points:" + epoints );
             Console.WriteLine ""
         }
         public static Pokemon DrawCard(List<Pokemon> refdeck, int cardrawer, int cardsleft)
         {
             if (decklist.Count > 0)
             {
-                Pokemon returnmon = decklist[cardrawer];
-                decklist.RemoveAt(cardrawer);
+                rng = new Random();
+                Pokemon returnmon = refdeck[cardrawer];
+                refdeck.RemoveAt(cardrawer);
                 return returnmon;
             }
             else
@@ -39,7 +41,8 @@
             }
         }
         static void Main(string[] args)
-        {/*
+        {
+            /*
             name type hp retreatcost weakness stage attackdata
             name hp retreatcost stage attackdata
             attack name damage effect cost*/
@@ -225,7 +228,8 @@
                 }
             }
             //Console.WriteLine("your deck contains:");
-            /*(for (int i = 0; i < decklist.Count; i++)
+            /*
+            for (int i = 0; i < decklist.Count; i++)
             {
                 if (i != 19)
                 {
@@ -236,7 +240,8 @@
                     Console.Write(decklist[i].name);
                 }
                 Console.WriteLine("");
-            }*/
+            }
+            */
             while (decklocked == false)
             {
                 if (deckchooser == deckelement)
@@ -325,22 +330,16 @@
             {               //player loop
                 hand.Clear();
                 cardrawer = rng.Next(pcardsleft);
-                rng = new Random();
                 hand.Add(DrawCard(decklist, cardrawer));
                 cardrawer = rng.Next(pcardsleft);
-                rng = new Random();
                 hand.Add(DrawCard(decklist, cardrawer));
                 cardrawer = rng.Next(pcardsleft);
-                rng = new Random();
                 hand.Add(DrawCard(decklist, cardrawer));
                 cardrawer = rng.Next(pcardsleft);
-                rng = new Random();
                 hand.Add(DrawCard(decklist, cardrawer));
                 cardrawer = rng.Next(pcardsleft);
-                rng = new Random();
                 hand.Add(DrawCard(decklist, cardrawer));
-                cardrawer = rng.Next(pcardsleft);
-                rng = new Random();
+                cardrawer = rng.Next(pcardsleft); 
                 if (hand.Any(p => p.stage == 0))
                 {
                     gtg = true;
