@@ -14,14 +14,18 @@
   *             i also added the part where the computer picks a deck from the ones left over
   * 5/16        working on making a deck to hold cards and to draw a card
   * 5/19        making draw card method
+  * 5/20        finished draw card, working on making the hand and checking whether the draw card is valid and the hand contains a basic pokemon
+                also, i converted over to VS code because I can.
   */
-    internal class Program
+    static internal class Program
     {
-        static void writescreen()
+        static void writescreen(List<Pokemon> enemyhand, int epoints )
         {
-
+            Console.Clear();
+            Console.WriteLine("Enemy Hand: "enemyhand.Count + "   Points:" + epoints );
+            Console.WriteLine ""
         }
-        public static Pokemon DrawCard(List<Pokemon> decklist, int cardrawer)
+        public static Pokemon DrawCard(List<Pokemon> refdeck, int cardrawer, int cardsleft)
         {
             if (decklist.Count > 0)
             {
@@ -43,13 +47,17 @@
             //jolt, 20, paralyze enemy 1);
             Random rng = new Random();
             bool decklocked = false;
-            int cardsleft = 20;
+            int pcardsleft = 20;
+            int ecardsleft = 20;
             int deckchooser = rng.Next(3);
-            int cardrawer = rng.Next(cardsleft);
+            int cardrawer = rng.Next(pcardsleft);
             int enemydeck;
             int deckelement = -1;
             string cardisplay = "";
+            int epoints = 0;
+            int ppoints = 0;
             List<Pokemon> decklist = new List<Pokemon>();
+            List<Pokemon> enemylist = new List<Pokemon>();
             attackdata ram = new attackdata("ram", 20, "", 1);
             attackdata blot = new attackdata("blot", 10, "heal 10 damage", 1);
             attackdata sharp_scythe = new attackdata("sharp scythe", 30, "", 1);
@@ -216,8 +224,8 @@
                     Console.WriteLine("please input either grass, fire, or water. ");
                 }
             }
-            Console.WriteLine("your deck contains:");
-            for (int i = 0; i < decklist.Count; i++)
+            //Console.WriteLine("your deck contains:");
+            /*(for (int i = 0; i < decklist.Count; i++)
             {
                 if (i != 19)
                 {
@@ -228,7 +236,7 @@
                     Console.Write(decklist[i].name);
                 }
                 Console.WriteLine("");
-            }
+            }*/
             while (decklocked == false)
             {
                 if (deckchooser == deckelement)
@@ -241,28 +249,97 @@
                     decklocked = true;
                 }
             }
+            if (deckchooser == 0)
+            {
+                    enemylist.Add(scyther);
+                    enemylist.Add(oddish1);
+                    enemylist.Add(oddish2);
+                    enemylist.Add(gloom);
+                    enemylist.Add(gloom2);
+                    enemylist.Add(bellossom);
+                    enemylist.Add(combee);
+                    enemylist.Add(combee2);
+                    enemylist.Add(vespiquen);
+                    enemylist.Add(sprigatito);
+                    enemylist.Add(sprigatito2);
+                    enemylist.Add(floragato);
+                    enemylist.Add(floragato2);
+                    enemylist.Add(meowscarada);
+                    enemylist.Add(meowscarada2);
+                    enemylist.Add(dhelmise_EX);
+                    enemylist.Add(dhelmise_EX2);
+                    enemylist.Add(heracross);
+                    enemylist.Add(heracross2);
+            }
+            else if (deckchooser == 1)
+            {
+                    enemylist.Add(charmander1);
+                    enemylist.Add(charmander2);
+                    enemylist.Add(charmeleon1);
+                    enemylist.Add(charmeleon2);
+                    enemylist.Add(charizard_EX1);
+                    enemylist.Add(charizard_EX2);
+                    enemylist.Add(heatmor1);
+                    enemylist.Add(heatmor2);
+                    enemylist.Add(houndour1);
+                    enemylist.Add(houndour2);
+                    enemylist.Add(houndoom1);
+                    enemylist.Add(houndoom2);
+                    enemylist.Add(magmar1);
+                    enemylist.Add(magmar2);
+                    enemylist.Add(magmortar1);
+                    enemylist.Add(magmortar2);
+                    enemylist.Add(fire_tauros1);
+                    enemylist.Add(fire_tauros2);
+                    enemylist.Add(oricorio);
+                    enemylist.Add(oricorio2);
+            }
+            else if (deckchooser == 2)
+            {
+                    enemylist.Add(staryu1);
+                    enemylist.Add(staryu2);
+                    enemylist.Add(starmie);
+                    enemylist.Add(starmie_EX);
+                    enemylist.Add(articuno_EX1);
+                    enemylist.Add(articuno_EX2);
+                    enemylist.Add(magikarp);
+                    enemylist.Add(gyarados_EX);
+                    enemylist.Add(buizel1);
+                    enemylist.Add(buizel2);
+                    enemylist.Add(floatzel1);
+                    enemylist.Add(floatzel2);
+                    enemylist.Add(tentacool1);
+                    enemylist.Add(tentacool2);
+                    enemylist.Add(tentacruel1);
+                    enemylist.Add(tentacruel2);
+                    enemylist.Add(bruxish1);
+                    enemylist.Add(bruxish2);
+                    enemylist.Add(lapras1);
+                    enemylist.Add(lapras2);
+            }
             List<Pokemon> hand = new List<Pokemon>();
+            List<Pokemon> enemyhand = new List <Pokemon>();
             string turn = "player";
             bool gtg = false;
             while (gtg == false)
-            {
+            {               //player loop
                 hand.Clear();
-                cardrawer = rng.Next(cardsleft);
+                cardrawer = rng.Next(pcardsleft);
                 rng = new Random();
                 hand.Add(DrawCard(decklist, cardrawer));
-                cardrawer = rng.Next(cardsleft);
+                cardrawer = rng.Next(pcardsleft);
                 rng = new Random();
                 hand.Add(DrawCard(decklist, cardrawer));
-                cardrawer = rng.Next(cardsleft);
+                cardrawer = rng.Next(pcardsleft);
                 rng = new Random();
                 hand.Add(DrawCard(decklist, cardrawer));
-                cardrawer = rng.Next(cardsleft);
+                cardrawer = rng.Next(pcardsleft);
                 rng = new Random();
                 hand.Add(DrawCard(decklist, cardrawer));
-                cardrawer = rng.Next(cardsleft);
+                cardrawer = rng.Next(pcardsleft);
                 rng = new Random();
                 hand.Add(DrawCard(decklist, cardrawer));
-                cardrawer = rng.Next(cardsleft);
+                cardrawer = rng.Next(pcardsleft);
                 rng = new Random();
                 if (hand.Any(p => p.stage == 0))
                 {
@@ -276,11 +353,44 @@
                     }
                 }
             }
-            
-            for (int i = 0; i < hand.Count; i++)
-            {
-                Console.WriteLine(hand[i].name);
+            gtg = false;
+            while (gtg == false)
+            {               //enemy loop
+                enemyhand.Clear();
+                cardrawer = rng.Next(ecardsleft);
+                rng = new Random();
+                enemyhand.Add(DrawCard(enemydeck, cardrawer));
+                cardrawer = rng.Next(ecardsleft);
+                rng = new Random();
+                enemyhand.Add(DrawCard(enemydeck, cardrawer));
+                cardrawer = rng.Next(ecardsleft);
+                rng = new Random();
+                enemyhand.Add(DrawCard(enemydeck, cardrawer));
+                cardrawer = rng.Next(ecardsleft);
+                rng = new Random();
+                enemyhand.Add(DrawCard(enemydeck, cardrawer));
+                cardrawer = rng.Next(ecardsleft);
+                rng = new Random();
+                enemyhand.Add(DrawCard(enemydeck, cardrawer));
+                cardrawer = rng.Next(ecardsleft);
+                rng = new Random();
+                if (enemyhand.Any(p => p.stage == 0))
+                {
+                    gtg = true;
+                }
+                for (int i = 0; i < enemyhand.Count; i++)
+                {
+                    if (enemyhand[i] == null)
+                    {
+                        enemyhand.RemoveAt(i);
+                    }
+                }
             }
+            bool gamend = false;
+            /*while(gamend == false)
+            {
+                
+            }*/
         }
     }
 }
