@@ -16,7 +16,8 @@
   * 5/19        making draw card method
   * 5/20        finished draw card, working on making the hand and checking whether the draw card is valid and the hand contains a basic pokemon
                 also, i converted over to VS code because I can.
-    5/22        
+    5/22        worked on printing the screen
+    5/23        
   */
     static internal class Program
     {
@@ -24,7 +25,7 @@
         {
             Console.Clear();
             Console.WriteLine("Enemy Hand: " + enemyhand.Count + "   Points:" + epoints );
-            Console.WriteLine ""
+            Console.WriteLine ("Bench: " + );
         }
         public static Pokemon DrawCard(List<Pokemon> refdeck, int cardrawer, int cardsleft)
         {
@@ -386,10 +387,19 @@
                 }
             }
             bool gamend = false;
-            /*while(gamend == false)
+            while(gamend == false)
             {
-                
-            }*/
+                writescreen(enemyhand, epoints);
+                if (turn =="player")
+                {
+                    Console.WriteLine("play a card for your active spot.")
+                    Console.Write("Hand: ");
+                    for (int i = 0; i <=hand.Count; i++;)
+                    {
+                        Console.Write(hand[i]+ ", ")
+                    }
+                }
+            }
         }
     }
 }
