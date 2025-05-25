@@ -21,17 +21,18 @@
   */
     static internal class Program
     {
-        static void writescreen(List<Pokemon> enemyhand, int epoints )
+        static void writescreen(List<Pokemon> enemyhand, int epoints ) // todo make screenwrite
         {
             Console.Clear();
             Console.WriteLine("Enemy Hand: " + enemyhand.Count + "   Points:" + epoints );
-            Console.WriteLine ("Bench: " + );
+            //Console.WriteLine("Bench: " + );
         }
-        public static Pokemon DrawCard(List<Pokemon> refdeck, int cardrawer, int cardsleft)
+        private static Pokemon DrawCard(List<Pokemon> refdeck, int cardrawer, Random rng)
         {
-            if (decklist.Count > 0)
+            if (refdeck.Count > 0)
             {
                 rng = new Random();
+                cardrawer = rng.Next(0, refdeck.Count);
                 Pokemon returnmon = refdeck[cardrawer];
                 refdeck.RemoveAt(cardrawer);
                 return returnmon;
@@ -331,15 +332,15 @@
             {               //player loop
                 hand.Clear();
                 cardrawer = rng.Next(pcardsleft);
-                hand.Add(DrawCard(decklist, cardrawer));
+                hand.Add(DrawCard(decklist, cardrawer, rng));
                 cardrawer = rng.Next(pcardsleft);
-                hand.Add(DrawCard(decklist, cardrawer));
+                hand.Add(DrawCard(decklist, cardrawer, rng));
                 cardrawer = rng.Next(pcardsleft);
-                hand.Add(DrawCard(decklist, cardrawer));
+                hand.Add(DrawCard(decklist, cardrawer, rng));
                 cardrawer = rng.Next(pcardsleft);
-                hand.Add(DrawCard(decklist, cardrawer));
+                hand.Add(DrawCard(decklist, cardrawer, rng));
                 cardrawer = rng.Next(pcardsleft);
-                hand.Add(DrawCard(decklist, cardrawer));
+                hand.Add(DrawCard(decklist, cardrawer, rng));
                 cardrawer = rng.Next(pcardsleft); 
                 if (hand.Any(p => p.stage == 0))
                 {
@@ -359,19 +360,19 @@
                 enemyhand.Clear();
                 cardrawer = rng.Next(ecardsleft);
                 rng = new Random();
-                enemyhand.Add(DrawCard(enemydeck, cardrawer));
+                enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                 cardrawer = rng.Next(ecardsleft);
                 rng = new Random();
-                enemyhand.Add(DrawCard(enemydeck, cardrawer));
+                enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                 cardrawer = rng.Next(ecardsleft);
                 rng = new Random();
-                enemyhand.Add(DrawCard(enemydeck, cardrawer));
+                enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                 cardrawer = rng.Next(ecardsleft);
                 rng = new Random();
-                enemyhand.Add(DrawCard(enemydeck, cardrawer));
+                enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                 cardrawer = rng.Next(ecardsleft);
                 rng = new Random();
-                enemyhand.Add(DrawCard(enemydeck, cardrawer));
+                enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                 cardrawer = rng.Next(ecardsleft);
                 rng = new Random();
                 if (enemyhand.Any(p => p.stage == 0))
@@ -392,11 +393,11 @@
                 writescreen(enemyhand, epoints);
                 if (turn =="player")
                 {
-                    Console.WriteLine("play a card for your active spot.")
+                    Console.WriteLine("play a card for your active spot.");
                     Console.Write("Hand: ");
-                    for (int i = 0; i <=hand.Count; i++;)
+                    for (int i = 0; i <=hand.Count; i++)
                     {
-                        Console.Write(hand[i]+ ", ")
+                        Console.Write(hand[i]+ ", ");
                     }
                 }
             }
