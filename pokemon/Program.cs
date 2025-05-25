@@ -388,14 +388,14 @@
                 }
             }
             bool gamend = false;
-            while(gamend == false)
+            //while(gamend == false)
             {
                 writescreen(enemyhand, epoints);
                 if (turn =="player")
                 {
                     Console.WriteLine("play a card for your active spot.");
                     Console.Write("Hand: ");
-                    for (int i = 0; i <=hand.Count; i++)
+                    for (int i = 0; i <hand.Count; i++)
                     {
                         Console.Write(hand[i]+ ", ");
                     }
