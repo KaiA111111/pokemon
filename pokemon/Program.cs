@@ -17,15 +17,24 @@
   * 5/20        finished draw card, working on making the hand and checking whether the draw card is valid and the hand contains a basic pokemon
                 also, i converted over to VS code because I can.
     5/22        worked on printing the screen
-    5/23        
+    5/26        working on the first step logic. it is seperate from the rest of the game loop because they are different. 
+                write screen logic and core game loop (turn) logic
   */
     static internal class Program
     {
-        static void writescreen(List<Pokemon> enemyhand, int epoints ) // todo make screenwrite
+        static void writescreen(List<Pokemon> enemyhand, int epoints , List<Pokemon> ebench, Pokemon eactivepokemon, 
+            Pokemon pactivepoemon, List<Pokemon> hand, List<Pokemon> pbench, int ppoints) // todo make screenwrite
         {
             Console.Clear();
-            Console.WriteLine("Enemy Hand: " + enemyhand.Count + "   Points:" + epoints );
-            //Console.WriteLine("Bench: " + );
+            Console.WriteLine("Enemy Hand: " + enemyhand.Count + "    Points:" + epoints );
+            Console.WriteLine("Enemy Bench: " + ebench[0].name + ", " + ebench[1].name + "," + ebench[2].name);
+            Console.WriteLine("Enemy Active: " + eactivepokemon.name);
+            Console.WriteLine();
+            Console.WriteLine("Your Active: " + pactivepoemon.name);
+            Console.WriteLine("Your Bench: " + pbench[0].name + ", " + pbench[1].name + "," + pbench[2].name);
+            Console.WriteLine("Your Hand: " + hand.Count + "    Points:" + ppoints);
+            Console.WriteLine("Hand     Bench     Active     ");
+            Console.WriteLine("1        2         3          ");
         }
         private static Pokemon DrawCard(List<Pokemon> refdeck, int cardrawer, Random rng)
         {
@@ -58,9 +67,6 @@
             int cardrawer = rng.Next(pcardsleft);
             int enemydeck;
             int deckelement = -1;
-            string cardisplay = "";
-            int epoints = 0;
-            int ppoints = 0;
             List<Pokemon> decklist = new List<Pokemon>();
             List<Pokemon> enemylist = new List<Pokemon>();
             attackdata ram = new attackdata("ram", 20, "", 1);
@@ -248,7 +254,8 @@
             {
                 if (deckchooser == deckelement)
                 {
-                    deckchooser = rng.Next(deckchooser);
+                    rng = new Random();
+                    deckchooser = rng.Next(3);
                 }
                 else
                 {
@@ -326,7 +333,6 @@
             }
             List<Pokemon> hand = new List<Pokemon>();
             List<Pokemon> enemyhand = new List <Pokemon>();
-            string turn = "player";
             bool gtg = false;
             while (gtg == false)
             {               //player loop
@@ -346,58 +352,114 @@
                 {
                     gtg = true;
                 }
-                for (int i = 0; i < hand.Count; i++)
+                /*for (int i = 0; i < hand.Count; i++)
                 {
                     if (hand[i] == null)
                     {
                         hand.RemoveAt(i);
                     }
-                }
+                }*/
             }
             gtg = false;
             while (gtg == false)
             {               //enemy loop
                 enemyhand.Clear();
                 cardrawer = rng.Next(ecardsleft);
-                rng = new Random();
                 enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                 cardrawer = rng.Next(ecardsleft);
-                rng = new Random();
                 enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                 cardrawer = rng.Next(ecardsleft);
-                rng = new Random();
                 enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                 cardrawer = rng.Next(ecardsleft);
-                rng = new Random();
                 enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                 cardrawer = rng.Next(ecardsleft);
-                rng = new Random();
                 enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                 cardrawer = rng.Next(ecardsleft);
-                rng = new Random();
                 if (enemyhand.Any(p => p.stage == 0))
                 {
                     gtg = true;
                 }
-                for (int i = 0; i < enemyhand.Count; i++)
+                /*for (int i = 0; i < enemyhand.Count; i++)
                 {
                     if (enemyhand[i] == null)
                     {
                         enemyhand.RemoveAt(i);
                     }
-                }
+                }*/
             }
+            List<Pokemon> ebench = new List<Pokemon>();
+            List<Pokemon> pbench = new List<Pokemon>();
+            ecardsleft = 20;
+            pcardsleft = 20;
+            int epoints = 0;
+            int ppoints = 0;
+            int chosenactive;  //player turn
+            Pokemon pactivepokemon = null;
+            Pokemon eactivepokemon = null;
             bool gamend = false;
-            //while(gamend == false)
+            while(true)
             {
-                writescreen(enemyhand, epoints);
-                if (turn =="player")
+                
+                Console.WriteLine("play a card for your active spot.");
+                Console.Write("Hand: ");
+                for (int i = 0; i < hand.Count; i++)
                 {
-                    Console.WriteLine("play a card for your active spot.");
-                    Console.Write("Hand: ");
-                    for (int i = 0; i <hand.Count; i++)
+                    Console.Write(hand[i].name + ", ");
+                }
+                Console.WriteLine();
+                Console.WriteLine("select 0 through 4 to choose your active pokemon, left to right 0 to 4.");
+                while (pactivepokemon == null)
+                {
+                    string input = Console.ReadLine();
+                    if (input == "0" || input == "1" || input == "2" || input == "3" || input == "4")
                     {
-                        Console.Write(hand[i]+ ", ");
+                        chosenactive = int.Parse(input);
+                        if (hand[chosenactive].stage == 0)
+                        {
+                            pactivepokemon = hand[chosenactive];
+                            hand.RemoveAt(chosenactive);
+                            Console.WriteLine(pactivepokemon.name);
+
+                        }
+                        else
+                        {
+                            Console.WriteLine("please input a number that is a basic pokemon 0 through 4.");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("please input a number 0 through 4.");
+                    }
+                }
+
+
+                //enemy turn
+                Pokemon ecardplaced = null;
+                for (int i = 0; i < enemyhand.Count; i++)
+                {
+                    if (enemyhand[i].stage == 0)
+                    {
+                        eactivepokemon = enemyhand[i];
+                    }
+                    ecardplaced = enemyhand[i];
+                }
+                enemyhand.Remove(ecardplaced);
+                cardrawer = rng.Next(pcardsleft);
+                hand.Add(DrawCard(decklist, cardrawer, rng));
+                cardrawer = rng.Next(ecardsleft);
+                enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
+                while (!gamend)
+                {
+                    for (int i = 0; i <= 2; i++)
+                    {
+                        ebench.Add(magmar1);
+                        pbench.Add(sprigatito);
+                    }
+                    writescreen(enemyhand, epoints, ebench, eactivepokemon, pactivepokemon, hand, pbench, ppoints);
+                    string input = Console.ReadLine();
+                    if (input == "0")
+                    {
+
                     }
                 }
             }
