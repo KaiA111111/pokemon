@@ -19,6 +19,7 @@
     5/22        worked on printing the screen
     5/26        working on the first step logic. it is seperate from the rest of the game loop because they are different. 
                 write screen logic and core game loop (turn) logic
+    5/27        
   */
     static internal class Program
     {
@@ -457,9 +458,13 @@
                     }
                     writescreen(enemyhand, epoints, ebench, eactivepokemon, pactivepokemon, hand, pbench, ppoints);
                     string input = Console.ReadLine();
-                    if (input == "0")
+                    if (input == "1")
                     {
-
+                        Console.WriteLine("Hand: ");
+                        for (int i = 0; i < hand.Count; i++)
+                        {
+                            Console.Write(hand[i].name + ", ");
+                        }
                     }
                 }
             }
