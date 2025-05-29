@@ -14,8 +14,9 @@ namespace pokemontcg
         public int retreatcost { get; set; }
         public string weakness { get; set; }
         public int stage { get; set; }
+        public int energy { get; set; }
 
-        public Pokemon(string Name, string Type, int Hp, int Retreatcost, string Weakness, int Stage, attackdata atkdata)
+        public Pokemon(string Name, string Type, int Hp, int Retreatcost, string Weakness, int Stage, int Energy, attackdata atkdata)
         {
             name = Name;
             type = Type;
@@ -23,6 +24,7 @@ namespace pokemontcg
             retreatcost = Retreatcost;
             weakness = Weakness;
             stage = Stage;
+            energy = Energy;
         }
     }
 }
