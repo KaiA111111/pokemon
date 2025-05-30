@@ -1,4 +1,6 @@
-﻿namespace pokemontcg
+﻿using System.Linq;
+
+namespace pokemontcg
 {
     /*Name: Kai Andrews
      * Problem:We need to implement the pokemon trading card game in C#.
@@ -20,22 +22,106 @@
        5/26        working on the first step logic. it is seperate from the rest of the game loop because they are different. 
                    write screen logic and core game loop (turn) logic
        5/28        worked on select logic for player (selecting a bench, active, hand card)
+       5/29        finished the player turn core loop, working on enemy core turn loop as well as some more hand and bench logic (confusing ugh)
+                   working on evolving as well
+       
      */
     static internal class Program
     {
+        static Pokemon Mosthpfinder(List<Pokemon> ebench)
+        {
+            Pokemon maxhpmon = null;
+            int maxhp = int.MinValue;
+            for (int i = 0; i < ebench.Count; i++)
+            {
+                if (ebench[i].hp > maxhp)
+                {
+                    maxhp = ebench[i].hp;
+                    maxhpmon = ebench[i];
+                }
+            }
+            return maxhpmon;
+        }
+        static void removenulls(List<Pokemon> ehand, List<Pokemon>phand)
+        {
+            for (int i = phand.Count - 1; i >= 0; i--)
+            {
+                if (phand[i] == null)
+                {
+                    phand.RemoveAt(i);
+                }
+            }
+            for (int i = ehand.Count - 1; i >= 0; i--)
+            {
+                if (ehand[i] == null)
+                {
+                    ehand.RemoveAt(i);
+                }
+            }
+        }
         static void writescreen(List<Pokemon> enemyhand, int epoints, List<Pokemon> ebench, Pokemon eactivepokemon,
             Pokemon pactivepoemon, List<Pokemon> hand, List<Pokemon> pbench, int ppoints) // todo make screenwrite
         {
             Console.Clear();
             Console.WriteLine("Enemy Hand: " + enemyhand.Count + "    Points:" + epoints);
-            Console.WriteLine("Enemy Bench: " + ebench[0].name + ", " + ebench[1].name + "," + ebench[2].name);
-            Console.WriteLine("Enemy Active: " + eactivepokemon.name);
+            // enemy bench
+            Console.Write("Enemy Bench: ");
+            for (int i = 0; i < 3; i++)
+            {
+                if (i < ebench.Count && ebench[i] != null)
+                    Console.Write(ebench[i].name);
+                else
+                    Console.Write("---");
+                if (i < 2) Console.Write(", ");
+            }
             Console.WriteLine();
-            Console.WriteLine("Your Active: " + pactivepoemon.name);
-            Console.WriteLine("Your Bench: " + pbench[0].name + ", " + pbench[1].name + "," + pbench[2].name);
+
+            Console.WriteLine("Enemy Active: " + (eactivepokemon != null ? eactivepokemon.name : "---"));
+            Console.WriteLine();
+
+            Console.WriteLine("Your Active: " + (pactivepoemon != null ? pactivepoemon.name : "---"));
+
+            // player bench
+            Console.Write("Your Bench: ");
+            for (int i = 0; i < 3; i++)
+            {
+                if (i < pbench.Count && pbench[i] != null)
+                    Console.Write(pbench[i].name);
+                else
+                    Console.Write("---");
+                if (i < 2) Console.Write(", ");
+            }
+            Console.WriteLine();
             Console.WriteLine("Your Hand: " + hand.Count + "    Points:" + ppoints);
-            Console.WriteLine("Hand     Bench     Active     ");
-            Console.WriteLine("1        2         3          ");
+            Console.WriteLine("Hand     Bench     Active     End Turn");
+            Console.WriteLine("1        2         3          4       ");
+        }
+        static void DoAttack(Pokemon attackingpokemon, Pokemon enemyactive)
+        {
+            enemyactive.hp -= attackingpokemon.atkdata.damage;
+            if (attackingpokemon.type == "grass" && enemyactive.type == "water")
+            {
+                enemyactive.hp -= 20;
+            }
+            if (attackingpokemon.type == "water" && enemyactive.type == "fire")
+            {
+                enemyactive.hp -= 20;
+            }
+            if (attackingpokemon.type == "fire" && enemyactive.type == "grass")
+            {
+                enemyactive.hp -= 20;
+            }
+            if (attackingpokemon.atkdata.effect == "if the active enemy is an EX, this does 70 more damage")
+            {
+                if (enemyactive.name.Contains("EX"))
+                {
+                    enemyactive.hp -= 70;
+                }
+            }
+            else if (attackingpokemon.atkdata.effect == "heal 10 damage")
+            {
+                attackingpokemon.hp += 10;
+            }
         }
         private static Pokemon DrawCard(List<Pokemon> refdeck, int cardrawer, Random rng)
         {
@@ -56,101 +142,106 @@
         {
             while (true)
             {
-                /*name type hp retreatcost weakness stage energy attackdata
-                  name hp retreatcost stage attackdata
+                /*name type hp retreatcost weakness stage energy attackdata base evolve 
                   attack name damage effect cost
                   pokemon pikachu = new pokemon("pikachu", "electric", 60, 1, "fighting", 0, jolt
                   jolt, 20, paralyze enemy 1); */
                 Random rng = new Random();
+                List<Pokemon> grassdeck = new List<Pokemon>();
+                List<Pokemon> firedeck = new List<Pokemon>();
+                List<Pokemon> waterdeck = new List<Pokemon>();
+                string deckelemental = "";
                 bool decklocked = false;
                 int pcardsleft = 20;
                 int ecardsleft = 20;
                 int deckchooser = rng.Next(3);
                 int cardrawer = rng.Next(pcardsleft);
-                int enemydeck;
                 int deckelement = -1;
+                int enemydeck;
                 int inputchecker = -1;
                 List<Pokemon> decklist = new List<Pokemon>();
                 List<Pokemon> enemylist = new List<Pokemon>();
-                attackdata ram = new attackdata("ram", 20, "", 1);
+
+                attackdata ram = new attackdata("ram", 20, "none", 1);
                 attackdata blot = new attackdata("blot", 10, "heal 10 damage", 1);
-                attackdata sharp_scythe = new attackdata("sharp scythe", 30, "", 1);
-                attackdata slash = new attackdata("slash", 40, "", 2);
-                attackdata leaf_step = new attackdata("leaf step", 80, "", 2);
+                attackdata sharp_scythe = new attackdata("sharp scythe", 30, "none", 1);
+                attackdata slash = new attackdata("slash", 40, "none", 2);
+                attackdata leaf_step = new attackdata("leaf step", 80, "none", 2);
                 attackdata fighting_claws = new attackdata("fighting claws", 60, "if the active enemy is an EX, this does 70 more damage", 2);
-                attackdata anchor = new attackdata("anchor", 80, "enemy cannot retreat next turn", 3);
-                attackdata horn_throw = new attackdata("anchor", 90, "", 3);
-                attackdata claws = new attackdata("claws", 60, "", 3);
-                attackdata crimson_storm = new attackdata("crimson storm", 200, "", 4);
-                attackdata corner = new attackdata("corner", 70, "", 2);
-                attackdata smoke_bomb = new attackdata("smoke bomb", 70, "", 3);
-                attackdata pound = new attackdata("pound", 40, "", 2);
-                attackdata splash = new attackdata("splash", 40, "", 1);
-                attackdata hydro_splash = new attackdata("hydro splash", 90, "", 2);
-                attackdata blizzard = new attackdata("blizzard", 100, "", 3);
-                attackdata whirlpool = new attackdata("whirlpool", 140, "", 4);
+                attackdata anchor = new attackdata("anchor", 80, "none", 3);
+                attackdata horn_throw = new attackdata("horn throw", 90, "none", 3);
+                attackdata claws = new attackdata("claws", 60, "none", 3);
+                attackdata crimson_storm = new attackdata("crimson storm", 200, "none", 4);
+                attackdata corner = new attackdata("corner", 70, "none", 2);
+                attackdata smoke_bomb = new attackdata("smoke bomb", 70, "none", 3);
+                attackdata pound = new attackdata("pound", 40, "none", 2);
+                attackdata splash = new attackdata("splash", 40, "none", 1);
+                attackdata hydro_splash = new attackdata("hydro splash", 90, "none", 2);
+                attackdata blizzard = new attackdata("blizzard", 100, "none", 3);
+                attackdata whirlpool = new attackdata("whirlpool", 140, "none", 4);
 
-                Pokemon scyther = new Pokemon("scyther", "grass", 70, 1, "fire", 0, 0, sharp_scythe);
-                Pokemon oddish1 = new Pokemon("oddish", "grass", 60, 1, "fire", 0, 0, ram);
-                Pokemon oddish2 = new Pokemon("oddish", "grass", 60, 1, "fire", 0, 0, blot);
-                Pokemon gloom = new Pokemon("gloom", "grass", 80, 2, "fire", 1, 0, sharp_scythe);
-                Pokemon gloom2 = new Pokemon("gloom", "grass", 80, 2, "fire", 1, 0, sharp_scythe);
-                Pokemon bellossom = new Pokemon("bellossom", "grass", 130, 1, "fire", 2, 0, sharp_scythe);
-                Pokemon combee = new Pokemon("combee", "grass", 50, 1, "fire", 0, 0, ram);
-                Pokemon combee2 = new Pokemon("combee", "grass", 50, 1, "fire", 0, 0, ram);
-                Pokemon vespiquen = new Pokemon("vespiquen", "grass", 100, 2, "fire", 1, 0, leaf_step);
-                Pokemon sprigatito = new Pokemon("sprigatito", "grass", 60, 1, "fire", 0, 0, ram);
-                Pokemon sprigatito2 = new Pokemon("sprigatito", "grass", 60, 1, "fire", 0, 0, ram);
-                Pokemon floragato = new Pokemon("floragato", "grass", 90, 1, "fire", 1, 0, slash);
-                Pokemon floragato2 = new Pokemon("floragato", "grass", 90, 1, "fire", 1, 0, slash);
-                Pokemon meowscarada = new Pokemon("meowscarada", "grass", 140, 1, "fire", 2, 0, fighting_claws);
-                Pokemon meowscarada2 = new Pokemon("meowscarada", "grass", 140, 1, "fire", 2, 0, fighting_claws);
-                Pokemon dhelmise_EX = new Pokemon("dhelmise EX", "grass", 140, 2, "fire", 0, 0, anchor);
-                Pokemon dhelmise_EX2 = new Pokemon("dhelmise EX", "grass", 140, 2, "fire", 0, 0, anchor);
-                Pokemon heracross = new Pokemon("heracross", "grass", 100, 2, "fire", 0, 0, horn_throw);
-                Pokemon heracross2 = new Pokemon("heracross", "grass", 100, 2, "fire", 0, 0, horn_throw);
+                Pokemon scyther = new Pokemon("scyther", "grass", 70, 1, "fire", 0, 0, sharp_scythe, "none");
+                Pokemon oddish1 = new Pokemon("oddish", "grass", 60, 1, "fire", 0, 0, ram, "none");
+                Pokemon oddish2 = new Pokemon("oddish", "grass", 60, 1, "fire", 0, 0, blot, "none");
+                Pokemon gloom = new Pokemon("gloom", "grass", 80, 2, "fire", 1, 0, sharp_scythe, "oddish");
+                Pokemon gloom2 = new Pokemon("gloom", "grass", 80, 2, "fire", 1, 0, sharp_scythe, "oddish");
+                Pokemon bellossom = new Pokemon("bellossom", "grass", 130, 1, "fire", 2, 0, sharp_scythe, "gloom");
+                Pokemon bellossom2 = new Pokemon("bellossom", "grass", 130, 1, "fire", 2, 0, sharp_scythe, "gloom");
+                Pokemon combee = new Pokemon("combee", "grass", 50, 1, "fire", 0, 0, ram, "none");
+                Pokemon combee2 = new Pokemon("combee", "grass", 50, 1, "fire", 0, 0, ram, "none");
+                Pokemon vespiquen = new Pokemon("vespiquen", "grass", 100, 2, "fire", 1, 0, leaf_step, "combee");
+                Pokemon sprigatito = new Pokemon("sprigatito", "grass", 60, 1, "fire", 0, 0, ram, "none");
+                Pokemon sprigatito2 = new Pokemon("sprigatito", "grass", 60, 1, "fire", 0, 0, ram, "none");
+                Pokemon floragato = new Pokemon("floragato", "grass", 90, 1, "fire", 1, 0, slash, "sprigatito");
+                Pokemon floragato2 = new Pokemon("floragato", "grass", 90, 1, "fire", 1, 0, slash, "sprigatito");
+                Pokemon meowscarada = new Pokemon("meowscarada", "grass", 140, 1, "fire", 2, 0, fighting_claws, "floragato");
+                Pokemon meowscarada2 = new Pokemon("meowscarada", "grass", 140, 1, "fire", 2, 0, fighting_claws, "floragato");
+                Pokemon dhelmise_EX = new Pokemon("dhelmise EX", "grass", 140, 2, "fire", 0, 0, anchor, "none");
+                Pokemon dhelmise_EX2 = new Pokemon("dhelmise EX", "grass", 140, 2, "fire", 0, 0, anchor, "none");
+                Pokemon heracross = new Pokemon("heracross", "grass", 100, 2, "fire", 0, 0, horn_throw, "none");
+                Pokemon heracross2 = new Pokemon("heracross", "grass", 100, 2, "fire", 0, 0, horn_throw, "none");
 
-                Pokemon charmander1 = new Pokemon("charmander", "fire", 60, 1, "water", 0, 0, ram);
-                Pokemon charmander2 = new Pokemon("charmander", "fire", 60, 1, "water", 0, 0, ram);
-                Pokemon charmeleon1 = new Pokemon("charmeleon", "fire", 90, 2, "water", 1, 0, claws);
-                Pokemon charmeleon2 = new Pokemon("charmeleon", "fire", 90, 2, "water", 1, 0, claws);
-                Pokemon charizard_EX1 = new Pokemon("charizard EX", "fire", 180, 2, "water", 2, 0, crimson_storm);
-                Pokemon charizard_EX2 = new Pokemon("charizard EX", "fire", 180, 2, "water", 2, 0, crimson_storm);
-                Pokemon heatmor1 = new Pokemon("heatmor", "fire", 80, 1, "water", 0, 0, sharp_scythe);
-                Pokemon heatmor2 = new Pokemon("heatmor", "fire", 80, 1, "water", 0, 0, sharp_scythe);
-                Pokemon houndour1 = new Pokemon("houndour", "fire", 60, 1, "water", 0, 0, ram);
-                Pokemon houndour2 = new Pokemon("houndour", "fire", 60, 1, "water", 0, 0, ram);
-                Pokemon houndoom1 = new Pokemon("houndoom", "fire", 100, 2, "water", 1, 0, corner);
-                Pokemon houndoom2 = new Pokemon("houndoom", "fire", 100, 2, "water", 1, 0, corner);
-                Pokemon magmar1 = new Pokemon("magmar", "fire", 70, 1, "water", 0, 0, ram);
-                Pokemon magmar2 = new Pokemon("magmar", "fire", 70, 1, "water", 0, 0, ram);
-                Pokemon magmortar1 = new Pokemon("magmortar", "fire", 120, 3, "water", 1, 0, smoke_bomb);
-                Pokemon magmortar2 = new Pokemon("magmortar", "fire", 120, 3, "water", 1, 0, smoke_bomb);
-                Pokemon fire_tauros1 = new Pokemon("fire tauros", "fire", 110, 2, "water", 0, 0, horn_throw);
-                Pokemon fire_tauros2 = new Pokemon("fire tauros", "fire", 110, 2, "water", 0, 0, horn_throw);
-                Pokemon oricorio = new Pokemon("oricorio", "fire", 70, 1, "water", 0, 0, pound);
-                Pokemon oricorio2 = new Pokemon("oricorio", "fire", 70, 1, "water", 0, 0, pound);
+                Pokemon charmander1 = new Pokemon("charmander", "fire", 60, 1, "water", 0, 0, ram, "none");
+                Pokemon charmander2 = new Pokemon("charmander", "fire", 60, 1, "water", 0, 0, ram, "none");
+                Pokemon charmeleon1 = new Pokemon("charmeleon", "fire", 90, 2, "water", 1, 0, claws, "charmander");
+                Pokemon charmeleon2 = new Pokemon("charmeleon", "fire", 90, 2, "water", 1, 0, claws, "charmander");
+                Pokemon charizard_EX1 = new Pokemon("charizard EX", "fire", 180, 2, "water", 2, 0, crimson_storm, "charmeleon");
+                Pokemon charizard_EX2 = new Pokemon("charizard EX", "fire", 180, 2, "water", 2, 0, crimson_storm, "charmeleon");
+                Pokemon heatmor1 = new Pokemon("heatmor", "fire", 80, 1, "water", 0, 0, sharp_scythe, "none");
+                Pokemon heatmor2 = new Pokemon("heatmor", "fire", 80, 1, "water", 0, 0, sharp_scythe, "none");
+                Pokemon houndour1 = new Pokemon("houndour", "fire", 60, 1, "water", 0, 0, ram, "none");
+                Pokemon houndour2 = new Pokemon("houndour", "fire", 60, 1, "water", 0, 0, ram, "none");
+                Pokemon houndoom1 = new Pokemon("houndoom", "fire", 100, 2, "water", 1, 0, corner, "houndour");
+                Pokemon houndoom2 = new Pokemon("houndoom", "fire", 100, 2, "water", 1, 0, corner, "houndour");
+                Pokemon magmar1 = new Pokemon("magmar", "fire", 70, 1, "water", 0, 0, ram, "none");
+                Pokemon magmar2 = new Pokemon("magmar", "fire", 70, 1, "water", 0, 0, ram, "none");
+                Pokemon magmortar1 = new Pokemon("magmortar", "fire", 120, 3, "water", 1, 0, smoke_bomb, "magmar");
+                Pokemon magmortar2 = new Pokemon("magmortar", "fire", 120, 3, "water", 1, 0, smoke_bomb, "magmar");
+                Pokemon fire_tauros1 = new Pokemon("fire tauros", "fire", 110, 2, "water", 0, 0, horn_throw, "none");
+                Pokemon fire_tauros2 = new Pokemon("fire tauros", "fire", 110, 2, "water", 0, 0, horn_throw, "none");
+                Pokemon oricorio = new Pokemon("oricorio", "fire", 70, 1, "water", 0, 0, pound, "none");
+                Pokemon oricorio2 = new Pokemon("oricorio", "fire", 70, 1, "water", 0, 0, pound, "none");
 
-                Pokemon staryu1 = new Pokemon("staryu", "water", 50, 1, "grass", 0, 0, ram);
-                Pokemon staryu2 = new Pokemon("staryu", "water", 50, 1, "grass", 0, 0, ram);
-                Pokemon starmie = new Pokemon("starmie", "water", 90, 1, "grass", 1, 0, splash);
-                Pokemon starmie_EX = new Pokemon("starmie EX", "water", 130, 0, "grass", 1, 0, hydro_splash);
-                Pokemon articuno_EX1 = new Pokemon("articuno EX", "water", 150, 2, "grass", 0, 0, blizzard);
-                Pokemon articuno_EX2 = new Pokemon("articuno EX", "water", 150, 2, "grass", 0, 0, blizzard);
-                Pokemon magikarp = new Pokemon("magikarp", "water", 30, 1, "grass", 0, 0, ram);
-                Pokemon gyarados_EX = new Pokemon("gyarados EX", "water", 180, 3, "grass", 1, 0, whirlpool);
-                Pokemon buizel1 = new Pokemon("buizel", "water", 60, 1, "grass", 0, 0, ram);
-                Pokemon buizel2 = new Pokemon("buizel", "water", 60, 1, "grass", 0, 0, ram);
-                Pokemon floatzel1 = new Pokemon("floatzel", "water", 90, 1, "grass", 1, 0, sharp_scythe);
-                Pokemon floatzel2 = new Pokemon("floatzel", "water", 90, 1, "grass", 1, 0, sharp_scythe);
-                Pokemon tentacool1 = new Pokemon("tentacool", "water", 70, 1, "grass", 0, 0, ram);
-                Pokemon tentacool2 = new Pokemon("tentacool", "water", 70, 1, "grass", 0, 0, ram);
-                Pokemon tentacruel1 = new Pokemon("tentacruel", "water", 100, 1, "grass", 1, 0, splash);
-                Pokemon tentacruel2 = new Pokemon("tentacruel", "water", 100, 1, "grass", 1, 0, splash);
-                Pokemon bruxish1 = new Pokemon("bruxish", "water", 80, 1, "grass", 0, 0, pound);
-                Pokemon bruxish2 = new Pokemon("bruxish", "water", 80, 1, "grass", 0, 0, pound);
-                Pokemon lapras1 = new Pokemon("lapras", "water", 110, 2, "grass", 0, 0, smoke_bomb);
-                Pokemon lapras2 = new Pokemon("lapras", "water", 110, 2, "grass", 0, 0, smoke_bomb);
+                Pokemon staryu1 = new Pokemon("staryu", "water", 50, 1, "grass", 0, 0, ram, "none");
+                Pokemon staryu2 = new Pokemon("staryu", "water", 50, 1, "grass", 0, 0, ram, "none");
+                Pokemon starmie = new Pokemon("starmie", "water", 90, 1, "grass", 1, 0, splash, "staryu");
+                Pokemon starmie_EX = new Pokemon("starmie EX", "water", 130, 0, "grass", 1, 0, hydro_splash, "staryu");
+                Pokemon articuno_EX1 = new Pokemon("articuno EX", "water", 150, 2, "grass", 0, 0, blizzard, "none");
+                Pokemon articuno_EX2 = new Pokemon("articuno EX", "water", 150, 2, "grass", 0, 0, blizzard, "none");
+                Pokemon magikarp = new Pokemon("magikarp", "water", 30, 1, "grass", 0, 0, ram, "none");
+                Pokemon gyarados_EX = new Pokemon("gyarados EX", "water", 180, 3, "grass", 1, 0, whirlpool, "magikarp");
+                Pokemon buizel1 = new Pokemon("buizel", "water", 60, 1, "grass", 0, 0, ram, "none");
+                Pokemon buizel2 = new Pokemon("buizel", "water", 60, 1, "grass", 0, 0, ram, "none");
+                Pokemon floatzel1 = new Pokemon("floatzel", "water", 90, 1, "grass", 1, 0, sharp_scythe, "buizel");
+                Pokemon floatzel2 = new Pokemon("floatzel", "water", 90, 1, "grass", 1, 0, sharp_scythe, "buizel");
+                Pokemon tentacool1 = new Pokemon("tentacool", "water", 70, 1, "grass", 0, 0, ram, "none");
+                Pokemon tentacool2 = new Pokemon("tentacool", "water", 70, 1, "grass", 0, 0, ram, "none");
+                Pokemon tentacruel1 = new Pokemon("tentacruel", "water", 100, 1, "grass", 1, 0, splash, "tentacool");
+                Pokemon tentacruel2 = new Pokemon("tentacruel", "water", 100, 1, "grass", 1, 0, splash, "tentacool");
+                Pokemon bruxish1 = new Pokemon("bruxish", "water", 80, 1, "grass", 0, 0, pound, "none");
+                Pokemon bruxish2 = new Pokemon("bruxish", "water", 80, 1, "grass", 0, 0, pound, "none");
+                Pokemon lapras1 = new Pokemon("lapras", "water", 110, 2, "grass", 0, 0, smoke_bomb, "none");
+                Pokemon lapras2 = new Pokemon("lapras", "water", 110, 2, "grass", 0, 0, smoke_bomb, "none");
 
                 bool deckchosen = false;
                 while (deckchosen == false)
@@ -168,6 +259,7 @@
                         decklist.Add(gloom);
                         decklist.Add(gloom2);
                         decklist.Add(bellossom);
+                        decklist.Add(bellossom2);
                         decklist.Add(combee);
                         decklist.Add(combee2);
                         decklist.Add(vespiquen);
@@ -181,7 +273,30 @@
                         decklist.Add(dhelmise_EX2);
                         decklist.Add(heracross);
                         decklist.Add(heracross2);
+
+                        grassdeck.Add(scyther);
+                        grassdeck.Add(oddish1);
+                        grassdeck.Add(oddish2);
+                        grassdeck.Add(gloom);
+                        grassdeck.Add(gloom2);
+                        grassdeck.Add(bellossom);
+                        grassdeck.Add(bellossom2);
+                        grassdeck.Add(combee);
+                        grassdeck.Add(combee2);
+                        grassdeck.Add(vespiquen);
+                        grassdeck.Add(sprigatito);
+                        grassdeck.Add(sprigatito2);
+                        grassdeck.Add(floragato);
+                        grassdeck.Add(floragato2);
+                        grassdeck.Add(meowscarada);
+                        grassdeck.Add(meowscarada2);
+                        grassdeck.Add(dhelmise_EX);
+                        grassdeck.Add(dhelmise_EX2);
+                        grassdeck.Add(heracross);
+                        grassdeck.Add(heracross2);
                         deckchosen = true;
+                        deckelemental = "grass";
+                        deckelement = 1;
                     }
                     else if (input == "fire")
                     {
@@ -206,7 +321,30 @@
                         decklist.Add(fire_tauros2);
                         decklist.Add(oricorio);
                         decklist.Add(oricorio2);
+
+                        firedeck.Add(charmander1);
+                        firedeck.Add(charmander2);
+                        firedeck.Add(charmeleon1);
+                        firedeck.Add(charmeleon2);
+                        firedeck.Add(charizard_EX1);
+                        firedeck.Add(charizard_EX2);
+                        firedeck.Add(heatmor1);
+                        firedeck.Add(heatmor2);
+                        firedeck.Add(houndour1);
+                        firedeck.Add(houndour2);
+                        firedeck.Add(houndoom1);
+                        firedeck.Add(houndoom2);
+                        firedeck.Add(magmar1);
+                        firedeck.Add(magmar2);
+                        firedeck.Add(magmortar1);
+                        firedeck.Add(magmortar2);
+                        firedeck.Add(fire_tauros1);
+                        firedeck.Add(fire_tauros2);
+                        firedeck.Add(oricorio);
+                        firedeck.Add(oricorio2);
                         deckchosen = true;
+                        deckelemental = "fire";
+                        deckelement = 2;
                     }
                     else if (input == "water")
                     {
@@ -231,7 +369,30 @@
                         decklist.Add(bruxish2);
                         decklist.Add(lapras1);
                         decklist.Add(lapras2);
+
+                        waterdeck.Add(staryu1);
+                        waterdeck.Add(staryu2);
+                        waterdeck.Add(starmie);
+                        waterdeck.Add(starmie_EX);
+                        waterdeck.Add(articuno_EX1);
+                        waterdeck.Add(articuno_EX2);
+                        waterdeck.Add(magikarp);
+                        waterdeck.Add(gyarados_EX);
+                        waterdeck.Add(buizel1);
+                        waterdeck.Add(buizel2);
+                        waterdeck.Add(floatzel1);
+                        waterdeck.Add(floatzel2);
+                        waterdeck.Add(tentacool1);
+                        waterdeck.Add(tentacool2);
+                        waterdeck.Add(tentacruel1);
+                        waterdeck.Add(tentacruel2);
+                        waterdeck.Add(bruxish1);
+                        waterdeck.Add(bruxish2);
+                        waterdeck.Add(lapras1);
+                        waterdeck.Add(lapras2);
                         deckchosen = true;
+                        deckelemental = "water";
+                        deckelement = 3;
                     }
                     else
                     {
@@ -339,18 +500,30 @@
                 bool gtg = false;
                 while (gtg == false)
                 {               //player loop
-                    hand.Clear();
-                    cardrawer = rng.Next(pcardsleft);
-                    hand.Add(DrawCard(decklist, cardrawer, rng));
-                    cardrawer = rng.Next(pcardsleft);
-                    hand.Add(DrawCard(decklist, cardrawer, rng));
-                    cardrawer = rng.Next(pcardsleft);
-                    hand.Add(DrawCard(decklist, cardrawer, rng));
-                    cardrawer = rng.Next(pcardsleft);
-                    hand.Add(DrawCard(decklist, cardrawer, rng));
-                    cardrawer = rng.Next(pcardsleft);
-                    hand.Add(DrawCard(decklist, cardrawer, rng));
-                    cardrawer = rng.Next(pcardsleft);
+                    do
+                    {
+                        if (hand.Count <= 15)
+                        {
+                            if (deckelemental == "grass")
+                            {
+
+                            }
+                        }
+                        hand.Clear();
+                        cardrawer = rng.Next(pcardsleft);
+                        hand.Add(DrawCard(decklist, cardrawer, rng));
+                        cardrawer = rng.Next(pcardsleft);
+                        hand.Add(DrawCard(decklist, cardrawer, rng));
+                        cardrawer = rng.Next(pcardsleft);
+                        hand.Add(DrawCard(decklist, cardrawer, rng));
+                        cardrawer = rng.Next(pcardsleft);
+                        hand.Add(DrawCard(decklist, cardrawer, rng));
+                        cardrawer = rng.Next(pcardsleft);
+                        hand.Add(DrawCard(decklist, cardrawer, rng));
+                        cardrawer = rng.Next(pcardsleft);
+                        removenulls(enemyhand, hand);
+                    }
+                    while (hand.Count > 0);
                     if (hand.Any(p => p.stage == 0))
                     {
                         gtg = true;
@@ -378,6 +551,7 @@
                     cardrawer = rng.Next(ecardsleft);
                     enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                     cardrawer = rng.Next(ecardsleft);
+                    removenulls(enemyhand, hand);
                     if (enemyhand.Any(p => p.stage == 0))
                     {
                         gtg = true;
@@ -400,65 +574,64 @@
                 Pokemon pactivepokemon = null;
                 Pokemon eactivepokemon = null;
                 bool gamend = false;
-                while (true)
+                Console.WriteLine("play a card for your active spot.");
+                Console.Write("Hand: ");
+                for (int i = 0; i < hand.Count; i++)
                 {
-                    Console.WriteLine("play a card for your active spot.");
-                    Console.Write("Hand: ");
-                    for (int i = 0; i < hand.Count; i++)
+                    Console.Write(hand[i].name + ", ");
+                }
+                Console.WriteLine();
+                Console.WriteLine("select 0 through 4 to choose your active pokemon, left to right 0 to 4.");
+                while (pactivepokemon == null)
+                {
+                    string input = Console.ReadLine();
+                    if (input == "0" || input == "1" || input == "2" || input == "3" || input == "4")
                     {
-                        Console.Write(hand[i].name + ", ");
-                    }
-                    Console.WriteLine();
-                    Console.WriteLine("select 0 through 4 to choose your active pokemon, left to right 0 to 4.");
-                    while (pactivepokemon == null)
-                    {
-                        string input = Console.ReadLine();
-                        if (input == "0" || input == "1" || input == "2" || input == "3" || input == "4")
+                        chosenactive = int.Parse(input);
+                        if (hand[chosenactive].stage == 0)
                         {
-                            chosenactive = int.Parse(input);
-                            if (hand[chosenactive].stage == 0)
-                            {
-                                pactivepokemon = hand[chosenactive];
-                                hand.RemoveAt(chosenactive);
-                                Console.WriteLine(pactivepokemon.name);
-
-                            }
-                            else
-                            {
-                                Console.WriteLine("please input a number that is a basic pokemon 0 through 4.");
-                            }
+                            pactivepokemon = hand[chosenactive];
+                            hand.RemoveAt(chosenactive);
+                            Console.WriteLine(pactivepokemon.name);
                         }
                         else
                         {
-                            Console.WriteLine("please input a number 0 through 4.");
+                            Console.WriteLine("please input a number that is a basic pokemon 0 through 4.");
                         }
                     }
-
-
-                    //enemy turn
-                    Pokemon ecardplaced = null;
-                    for (int i = 0; i < enemyhand.Count; i++)
+                    else
                     {
-                        if (enemyhand[i].stage == 0)
-                        {
-                            eactivepokemon = enemyhand[i];
-                        }
-                        ecardplaced = enemyhand[i];
+                        Console.WriteLine("please input a number 0 through 4.");
                     }
-                    enemyhand.Remove(ecardplaced);
-                    cardrawer = rng.Next(pcardsleft);
-                    hand.Add(DrawCard(decklist, cardrawer, rng));
-                    cardrawer = rng.Next(ecardsleft);
-                    enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
-                    while (!gamend)
+                }
+
+
+                //enemy turn
+                Pokemon ecardplaced = null;
+                for (int i = 0; i < enemyhand.Count; i++)
+                {
+                    if (enemyhand[i].stage == 0)
                     {
-                        pbench.Clear();
-                        ebench.Clear();
-                        for (int i = 0; i <= 2; i++)
-                        {
-                            ebench.Add(magmar1);
-                            pbench.Add(sprigatito);
-                        }
+                        eactivepokemon = enemyhand[i];
+                    }
+                    ecardplaced = enemyhand[i];
+                }
+                enemyhand.Remove(ecardplaced);
+                cardrawer = rng.Next(pcardsleft);
+                hand.Add(DrawCard(decklist, cardrawer, rng));
+                cardrawer = rng.Next(ecardsleft);
+                enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
+                cardrawer = rng.Next(ecardsleft);
+                while (!gamend)
+                {
+                    bool playerturn = true;
+                    while (playerturn == true)
+                    {
+                        pactivepokemon.energy++;
+                        cardrawer = rng.Next(pcardsleft);
+                        hand.Add(DrawCard(decklist, cardrawer, rng));
+                        cardrawer = rng.Next(pcardsleft);
+                        removenulls(enemyhand, hand);
                         writescreen(enemyhand, epoints, ebench, eactivepokemon, pactivepokemon, hand, pbench, ppoints);
                         string input = Console.ReadLine();
                         if (input == "1") //hand
@@ -471,22 +644,59 @@
                             Console.WriteLine();
                             Console.WriteLine("select any card in your hand, or press a letter to go back.");
                             input = Console.ReadLine();
-                            if (int.TryParse(input, out inputchecker) && int.Parse(input) < hand.Count)
+                            if (int.TryParse(input, out inputchecker) && int.Parse(input) < hand.Count && inputchecker >=0)
                             {
                                 int iinput = int.Parse(input);
-                                Console.WriteLine(hand[iinput].name + ": " + hand[iinput].energy + " energy " + hand[iinput].hp + " hp " + hand[iinput].type + " " 
-                                + "retreat cost " + hand[iinput].retreatcost + " stage " + hand[iinput].stage);
-                                Console.WriteLine("press 1 to play to bench. press anything else to go back.");
+                                Console.WriteLine(hand[iinput].name + ": " + hand[iinput].energy + " energy " + hand[iinput].hp + " hp " + hand[iinput].type + " "
+                                + "retreat cost " + hand[iinput].retreatcost + " stage " + hand[iinput].stage + "evolves from: " + hand[iinput].evolvesfrom);
+                                Console.WriteLine("press 1 to play to bench or evolve. press anything else to go back.");
                                 input = Console.ReadLine();
                                 if (int.TryParse(input, out inputchecker))
                                 {
-
+                                    if (iinput == 1)
+                                    {
+                                        if (pbench.Count < 3 && hand[iinput].stage == 0) //play a card
+                                        {
+                                            pbench.Add(hand[iinput]);
+                                            hand.RemoveAt(iinput);
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("hand is full or card cannot be played. Press a key to continue.");
+                                            char whyexistatall = Console.ReadKey().KeyChar;
+                                        }
+                                        if (hand[iinput].stage == 1) //evolve logic
+                                        {
+                                            for (int j = 0; j < pbench.Count; j++)
+                                            {
+                                                if (pbench[j].stage == 0 && hand[iinput].evolvesfrom == pbench[j].name)
+                                                {
+                                                    pbench[j] = hand[iinput];
+                                                    hand.RemoveAt(iinput);
+                                                    break; // keeps from evolving 2 of the same card with one higher stage
+                                                }
+                                            }
+                                        }
+                                        if (hand[iinput].stage == 2) //evolve logic
+                                        {
+                                            for (int j = 0; j < pbench.Count; j++)
+                                            {
+                                                if (pbench[j].stage == 1 && hand[iinput].evolvesfrom == pbench[j].name)
+                                                {
+                                                    pbench[j] = hand[iinput];
+                                                    hand.RemoveAt(iinput);
+                                                    break; // keeps from evolving 2 of the same card with one higher stage
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                         else if (input == "2") //bench
                         {
-                            Console.WriteLine("select a benched pokemon to turn to active. Press 4 to go back.");
+                            Console.WriteLine("select a benched pokemon to turn to active. Press anything else to go back.");
+                            Console.WriteLine("Your Bench: ");
                             for (int i = 0; i < pbench.Count; i++)
                             {
                                 Console.Write(pbench[i].name.PadRight(15));
@@ -497,50 +707,163 @@
                                 Console.Write(i.ToString().PadRight(15));
                             }
                             Console.WriteLine();
+                            Console.WriteLine("Enemy Bench:");
+                            for (int i = 0; i < ebench.Count; i++)
+                            {
+                                Console.Write(ebench[i].name.PadRight(15));
+                            }
+                            Console.WriteLine();
+                            for (int i = 0; i < ebench.Count; i++)
+                            {
+                                Console.Write(i.ToString().PadRight(15));
+                            }
+                            Console.WriteLine();
                             input = Console.ReadLine();
                             if (input == "0")
                             {
-                                if (pactivepokemon.energy <= pactivepokemon.retreatcost)
+                                if (pactivepokemon.energy >= pactivepokemon.retreatcost)
                                 {
-                                    pactivepokemon.energy -= pactivepokemon.retreatcost;
-                                    pbench.Add(pactivepokemon);
-                                    pactivepokemon = pbench[0];
-                                    pbench.RemoveAt(0);
+                                    if (pbench.Count >= 1)
+                                    {
+                                        pactivepokemon.energy -= pactivepokemon.retreatcost;
+                                        pbench.Add(pactivepokemon);
+                                        pactivepokemon = pbench[0];
+                                        pbench.RemoveAt(0);
+                                    }
                                 }
                                 else
                                 {
-                                    Console.WriteLine("active pokemon does not have enough energy to retreat.");
+                                    Console.WriteLine("active pokemon does not have enough energy to retreat, or there is nothing there.");
+                                    char whyevenexistatall = Console.ReadKey().KeyChar;
                                 }
                             }
                             else if (input == "1")
                             {
-                                if (pactivepokemon.energy <= pactivepokemon.retreatcost)
+                                if (pactivepokemon.energy >= pactivepokemon.retreatcost)
                                 {
-                                    pactivepokemon.energy -= pactivepokemon.retreatcost;
-                                    pbench.Add(pactivepokemon);
-                                    pactivepokemon = pbench[1];
-                                    pbench.RemoveAt(1);
+                                    if (pbench.Count >= 2)
+                                    {
+                                        pactivepokemon.energy -= pactivepokemon.retreatcost;
+                                        pbench.Add(pactivepokemon);
+                                        pactivepokemon = pbench[1];
+                                        pbench.RemoveAt(1);
+                                    }
                                 }
                                 else
                                 {
-                                    Console.WriteLine("active pokemon does not have enough energy to retreat.");
+                                    Console.WriteLine("active pokemon does not have enough energy to retreat, or there is nothing there.");
+                                    char whyevenexistatall = Console.ReadKey().KeyChar;
                                 }
                             }
                             else if (input == "2")
                             {
-                                if (pactivepokemon.energy <= pactivepokemon.retreatcost)
+                                if (pactivepokemon.energy >= pactivepokemon.retreatcost)
                                 {
-                                    pactivepokemon.energy -= pactivepokemon.retreatcost;
-                                    pbench.Add(pactivepokemon);
-                                    pactivepokemon = pbench[2];
-                                    pbench.RemoveAt(2);
+                                    if (pbench.Count >= 3)
+                                    {
+                                        pactivepokemon.energy -= pactivepokemon.retreatcost;
+                                        pbench.Add(pactivepokemon);
+                                        pactivepokemon = pbench[2];
+                                        pbench.RemoveAt(2);
+                                    }
                                 }
                                 else
                                 {
-                                    Console.WriteLine("active pokemon does not have enough energy to retreat.");
+                                    Console.WriteLine("active pokemon does not have enough energy to retreat, or there is nothing there.");
+                                    char whyevenexistatall = Console.ReadKey().KeyChar;
                                 }
                             }
-
+                        }
+                        else if (input == "3")
+                        {
+                            Console.WriteLine($"Enemy Active Pokémon: {eactivepokemon.name}, Type: {eactivepokemon.type}, HP: {eactivepokemon.hp}, " +
+                                              $"Retreat Cost: {eactivepokemon.retreatcost}, Stage: {eactivepokemon.stage}, Energy: {eactivepokemon.energy}" +
+                                              $" Attack: {eactivepokemon.atkdata.attackname}, Damage: {eactivepokemon.atkdata.damage} " +
+                                              $"         Cost: {eactivepokemon.atkdata.energycost}       Effect: {eactivepokemon.atkdata.effect}");
+                            Console.WriteLine();
+                            Console.WriteLine($"Active Pokémon: {pactivepokemon.name}, Type: {pactivepokemon.type}, HP: {pactivepokemon.hp}, " +
+                                              $"Retreat Cost: {pactivepokemon.retreatcost}, Stage: {pactivepokemon.stage}, Energy: {pactivepokemon.energy}" +
+                                              $" Attack: {pactivepokemon.atkdata.attackname}, Damage: {pactivepokemon.atkdata.damage} " +
+                                              $"         Cost: {pactivepokemon.atkdata.energycost}       Effect: {pactivepokemon.atkdata.effect}");
+                            Console.WriteLine("press a letter to go back, press 1 to attack");
+                            input = Console.ReadLine();
+                            if (input == "1")
+                            {
+                                if (pactivepokemon.energy >= pactivepokemon.atkdata.energycost)
+                                {
+                                    DoAttack(pactivepokemon, eactivepokemon);
+                                    playerturn = false;
+                                }
+                            }
+                        }
+                        else if (input == "4")
+                        {
+                            playerturn = false;
+                        }
+                        else
+                        {
+                            Console.WriteLine("please put in 1 through 4.");
+                        }
+                    }
+                    while (!playerturn) //enemy turn
+                    {
+                        eactivepokemon.energy++;
+                        cardrawer = rng.Next(ecardsleft);
+                        enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
+                        cardrawer = rng.Next(ecardsleft);
+                        removenulls(enemyhand, hand);
+                        for (int i = enemyhand.Count-1; i >= 0; i--) // hand procedure to play basics
+                        {
+                            if (enemyhand[i].stage == 0)
+                            {
+                                if (ebench.Count < 3)
+                                {
+                                    ebench.Add(enemyhand[i]);
+                                    enemyhand.RemoveAt(i);
+                                }
+                            }
+                            else if (enemyhand[i].stage == 1) //evolve logic
+                            {
+                                for (int j = 0; j < ebench.Count; j++)
+                                {
+                                    if (ebench[j].stage == 0 && enemyhand[i].name == ebench[j].evolvesfrom)
+                                    {
+                                        ebench.Add(enemyhand[i]);
+                                        enemyhand.RemoveAt(i);
+                                        ebench.RemoveAt(j);
+                                        break; // keeps from evolving 2 of the same card with one higher stage
+                                    }
+                                }
+                            }
+                            else if (enemyhand[i].stage == 2)
+                            {
+                                for (int j = 0; j < ebench.Count; j++)
+                                {
+                                    if (ebench[j].stage == 1 && enemyhand[i].name == ebench[j].evolvesfrom)
+                                    {
+                                        ebench.Add(enemyhand[i]);
+                                        enemyhand.RemoveAt(i);
+                                        ebench.RemoveAt(j);
+                                        break; // keeps from evolving 2 of the same card with one higher stage
+                                    }
+                                }
+                            }
+                        }
+                        if (eactivepokemon.hp <= 20 && eactivepokemon.energy >= eactivepokemon.retreatcost) // retreat if hp is low
+                        {
+                            eactivepokemon.energy -= eactivepokemon.retreatcost;
+                            Pokemon mosthponbench = Mosthpfinder(ebench);
+                            ebench.Add(eactivepokemon);
+                            eactivepokemon = mosthponbench;
+                        }
+                        if (eactivepokemon.energy >= eactivepokemon.atkdata.energycost) // attack
+                        {
+                            DoAttack(eactivepokemon, pactivepokemon);
+                            playerturn = true;
+                        }
+                        else //if you cant attack end turn
+                        {
+                            playerturn = true;
                         }
                     }
                 }

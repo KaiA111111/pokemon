@@ -15,8 +15,10 @@ namespace pokemontcg
         public string weakness { get; set; }
         public int stage { get; set; }
         public int energy { get; set; }
+        public attackdata atkdata { get; set; }
+        public string evolvesfrom { get; set; }
 
-        public Pokemon(string Name, string Type, int Hp, int Retreatcost, string Weakness, int Stage, int Energy, attackdata atkdata)
+        public Pokemon(string Name, string Type, int Hp, int Retreatcost, string Weakness, int Stage, int Energy, attackdata Atkdata, string Evolvesfrom)
         {
             name = Name;
             type = Type;
@@ -25,6 +27,8 @@ namespace pokemontcg
             weakness = Weakness;
             stage = Stage;
             energy = Energy;
+            atkdata = Atkdata;
+            evolvesfrom = Evolvesfrom;
         }
     }
 }
