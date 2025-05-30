@@ -93,6 +93,13 @@ namespace pokemontcg
                     ehand.RemoveAt(i);
                 }
             }
+            for (int i = ehand.Count - 1; i >= 0; i--)
+            {
+                if (ehand[i] == null)
+                {
+                    ehand.RemoveAt(i);
+                }
+            }
         }
         static void writescreen(List<Pokemon> enemyhand, int epoints, List<Pokemon> ebench, Pokemon eactivepokemon,
             Pokemon pactivepoemon, List<Pokemon> hand, List<Pokemon> pbench, int ppoints) // todo make screenwrite
@@ -601,15 +608,19 @@ namespace pokemontcg
                 {               //player loop
                     do
                     {
-                        /*if (hand.Count <= 15)
+                        if (deckelemental == "grass")
                         {
-                            if (deckelemental == "grass")
-                            {
-
-                            }
-                        }*/
-
-                         hand.Clear();
+                            decklist = grassdeck;
+                        }
+                        if (deckelemental == "fire")
+                        {
+                            decklist = firedeck;
+                        }
+                        if (deckelemental == "water")
+                        {
+                            decklist = waterdeck;
+                        }
+                        hand.Clear();
                         cardrawer = rng.Next(pcardsleft);
                         hand.Add(DrawCard(decklist, cardrawer, rng));
                         cardrawer = rng.Next(pcardsleft);
@@ -623,7 +634,7 @@ namespace pokemontcg
                         cardrawer = rng.Next(pcardsleft);
                         removenulls(enemyhand, hand);
                     }
-                    while (hand.Any(p => p.stage != 0));
+                    while (hand.Any(p => p.stage == 0));
                     if (hand.Any(p => p.stage == 0))
                     {
                         gtg = true;
