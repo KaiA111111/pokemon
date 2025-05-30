@@ -28,6 +28,41 @@ namespace pokemontcg
      */
     static internal class Program
     {
+        static void deadcheck(Pokemon pactivepokemon, List<Pokemon> pbench, bool gamend, bool playerwins)
+        {
+            if (pactivepokemon.hp <= 0 && pbench.Count >0)
+            {
+                Console.WriteLine("your pokemon has died. please select a pokemon from your bench.");
+                Console.Write("Bench: ");
+                for (int i = 0; i < 3; i++)
+                {
+                    if (i < pbench.Count && pbench[i] != null)
+                        Console.Write(pbench[i].name);
+                    else
+                        Console.Write("---");
+                    if (i < 2) Console.Write(", ");
+                }
+                Console.WriteLine();
+                string input = Console.ReadLine();
+                if (input == "0" && pbench.Count >= 1)
+                {
+                    pbench[0] = pactivepokemon;
+                }
+                if (input == "1" && pbench.Count >= 2)
+                {
+                    pbench[1] = pactivepokemon;
+                }
+                if (input == "2" && pbench.Count >= 3)
+                {
+                    pbench[2] = pactivepokemon;
+                }
+            }
+            else
+            {
+                gamend = true;
+                playerwins = false;
+            }
+        }
         static Pokemon Mosthpfinder(List<Pokemon> ebench)
         {
             Pokemon maxhpmon = null;
@@ -152,6 +187,7 @@ namespace pokemontcg
                 List<Pokemon> waterdeck = new List<Pokemon>();
                 string deckelemental = "";
                 bool decklocked = false;
+                bool playerwins = false;
                 int pcardsleft = 20;
                 int ecardsleft = 20;
                 int deckchooser = rng.Next(3);
@@ -448,6 +484,27 @@ namespace pokemontcg
                     enemylist.Add(dhelmise_EX2);
                     enemylist.Add(heracross);
                     enemylist.Add(heracross2);
+
+                    grassdeck.Add(scyther);
+                    grassdeck.Add(oddish1);
+                    grassdeck.Add(oddish2);
+                    grassdeck.Add(gloom);
+                    grassdeck.Add(gloom2);
+                    grassdeck.Add(bellossom);
+                    grassdeck.Add(bellossom2);
+                    grassdeck.Add(combee);
+                    grassdeck.Add(combee2);
+                    grassdeck.Add(vespiquen);
+                    grassdeck.Add(sprigatito);
+                    grassdeck.Add(sprigatito2);
+                    grassdeck.Add(floragato);
+                    grassdeck.Add(floragato2);
+                    grassdeck.Add(meowscarada);
+                    grassdeck.Add(meowscarada2);
+                    grassdeck.Add(dhelmise_EX);
+                    grassdeck.Add(dhelmise_EX2);
+                    grassdeck.Add(heracross);
+                    grassdeck.Add(heracross2);
                 }
                 else if (deckchooser == 1)
                 {
@@ -471,6 +528,27 @@ namespace pokemontcg
                     enemylist.Add(fire_tauros2);
                     enemylist.Add(oricorio);
                     enemylist.Add(oricorio2);
+
+                    firedeck.Add(charmander1);
+                    firedeck.Add(charmander2);
+                    firedeck.Add(charmeleon1);
+                    firedeck.Add(charmeleon2);
+                    firedeck.Add(charizard_EX1);
+                    firedeck.Add(charizard_EX2);
+                    firedeck.Add(heatmor1);
+                    firedeck.Add(heatmor2);
+                    firedeck.Add(houndour1);
+                    firedeck.Add(houndour2);
+                    firedeck.Add(houndoom1);
+                    firedeck.Add(houndoom2);
+                    firedeck.Add(magmar1);
+                    firedeck.Add(magmar2);
+                    firedeck.Add(magmortar1);
+                    firedeck.Add(magmortar2);
+                    firedeck.Add(fire_tauros1);
+                    firedeck.Add(fire_tauros2);
+                    firedeck.Add(oricorio);
+                    firedeck.Add(oricorio2);
                 }
                 else if (deckchooser == 2)
                 {
@@ -494,6 +572,27 @@ namespace pokemontcg
                     enemylist.Add(bruxish2);
                     enemylist.Add(lapras1);
                     enemylist.Add(lapras2);
+
+                    waterdeck.Add(staryu1);
+                    waterdeck.Add(staryu2);
+                    waterdeck.Add(starmie);
+                    waterdeck.Add(starmie_EX);
+                    waterdeck.Add(articuno_EX1);
+                    waterdeck.Add(articuno_EX2);
+                    waterdeck.Add(magikarp);
+                    waterdeck.Add(gyarados_EX);
+                    waterdeck.Add(buizel1);
+                    waterdeck.Add(buizel2);
+                    waterdeck.Add(floatzel1);
+                    waterdeck.Add(floatzel2);
+                    waterdeck.Add(tentacool1);
+                    waterdeck.Add(tentacool2);
+                    waterdeck.Add(tentacruel1);
+                    waterdeck.Add(tentacruel2);
+                    waterdeck.Add(bruxish1);
+                    waterdeck.Add(bruxish2);
+                    waterdeck.Add(lapras1);
+                    waterdeck.Add(lapras2);
                 }
                 List<Pokemon> hand = new List<Pokemon>();
                 List<Pokemon> enemyhand = new List<Pokemon>();
@@ -502,14 +601,15 @@ namespace pokemontcg
                 {               //player loop
                     do
                     {
-                        if (hand.Count <= 15)
+                        /*if (hand.Count <= 15)
                         {
                             if (deckelemental == "grass")
                             {
 
                             }
-                        }
-                        hand.Clear();
+                        }*/
+
+                         hand.Clear();
                         cardrawer = rng.Next(pcardsleft);
                         hand.Add(DrawCard(decklist, cardrawer, rng));
                         cardrawer = rng.Next(pcardsleft);
@@ -523,7 +623,7 @@ namespace pokemontcg
                         cardrawer = rng.Next(pcardsleft);
                         removenulls(enemyhand, hand);
                     }
-                    while (hand.Count > 0);
+                    while (hand.Any(p => p.stage != 0));
                     if (hand.Any(p => p.stage == 0))
                     {
                         gtg = true;
@@ -805,6 +905,7 @@ namespace pokemontcg
                             Console.WriteLine("please put in 1 through 4.");
                         }
                     }
+                    deadcheck(pactivepokemon, pbench, gamend, playerwins);
                     while (!playerturn) //enemy turn
                     {
                         eactivepokemon.energy++;
@@ -866,6 +967,7 @@ namespace pokemontcg
                             playerturn = true;
                         }
                     }
+                    
                 }
             }
         }
