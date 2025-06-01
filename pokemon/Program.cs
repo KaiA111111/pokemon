@@ -24,7 +24,7 @@ namespace pokemontcg
        5/28        worked on select logic for player (selecting a bench, active, hand card)
        5/29        finished the player turn core loop, working on enemy core turn loop as well as some more hand and bench logic (confusing ugh)
                    working on evolving as well
-       
+       5/30        ironing out bugs, glitches, and exceptions
      */
     static internal class Program
     {
@@ -243,6 +243,26 @@ namespace pokemontcg
                 Pokemon dhelmise_EX2 = new Pokemon("dhelmise EX", "grass", 140, 2, "fire", 0, 0, anchor, "none");
                 Pokemon heracross = new Pokemon("heracross", "grass", 100, 2, "fire", 0, 0, horn_throw, "none");
                 Pokemon heracross2 = new Pokemon("heracross", "grass", 100, 2, "fire", 0, 0, horn_throw, "none");
+                grassdeck.Add(scyther);
+                grassdeck.Add(oddish1);
+                grassdeck.Add(oddish2);
+                grassdeck.Add(gloom);
+                grassdeck.Add(gloom2);
+                grassdeck.Add(bellossom);
+                grassdeck.Add(bellossom2);
+                grassdeck.Add(combee);
+                grassdeck.Add(combee2);
+                grassdeck.Add(vespiquen);
+                grassdeck.Add(sprigatito);
+                grassdeck.Add(sprigatito2);
+                grassdeck.Add(floragato);
+                grassdeck.Add(floragato2);
+                grassdeck.Add(meowscarada);
+                grassdeck.Add(meowscarada2);
+                grassdeck.Add(dhelmise_EX);
+                grassdeck.Add(dhelmise_EX2);
+                grassdeck.Add(heracross);
+                grassdeck.Add(heracross2);
 
                 Pokemon charmander1 = new Pokemon("charmander", "fire", 60, 1, "water", 0, 0, ram, "none");
                 Pokemon charmander2 = new Pokemon("charmander", "fire", 60, 1, "water", 0, 0, ram, "none");
@@ -264,6 +284,26 @@ namespace pokemontcg
                 Pokemon fire_tauros2 = new Pokemon("fire tauros", "fire", 110, 2, "water", 0, 0, horn_throw, "none");
                 Pokemon oricorio = new Pokemon("oricorio", "fire", 70, 1, "water", 0, 0, pound, "none");
                 Pokemon oricorio2 = new Pokemon("oricorio", "fire", 70, 1, "water", 0, 0, pound, "none");
+                firedeck.Add(charmander1);
+                firedeck.Add(charmander2);
+                firedeck.Add(charmeleon1);
+                firedeck.Add(charmeleon2);
+                firedeck.Add(charizard_EX1);
+                firedeck.Add(charizard_EX2);
+                firedeck.Add(heatmor1);
+                firedeck.Add(heatmor2);
+                firedeck.Add(houndour1);
+                firedeck.Add(houndour2);
+                firedeck.Add(houndoom1);
+                firedeck.Add(houndoom2);
+                firedeck.Add(magmar1);
+                firedeck.Add(magmar2);
+                firedeck.Add(magmortar1);
+                firedeck.Add(magmortar2);
+                firedeck.Add(fire_tauros1);
+                firedeck.Add(fire_tauros2);
+                firedeck.Add(oricorio);
+                firedeck.Add(oricorio2);
 
                 Pokemon staryu1 = new Pokemon("staryu", "water", 50, 1, "grass", 0, 0, ram, "none");
                 Pokemon staryu2 = new Pokemon("staryu", "water", 50, 1, "grass", 0, 0, ram, "none");
@@ -285,6 +325,26 @@ namespace pokemontcg
                 Pokemon bruxish2 = new Pokemon("bruxish", "water", 80, 1, "grass", 0, 0, pound, "none");
                 Pokemon lapras1 = new Pokemon("lapras", "water", 110, 2, "grass", 0, 0, smoke_bomb, "none");
                 Pokemon lapras2 = new Pokemon("lapras", "water", 110, 2, "grass", 0, 0, smoke_bomb, "none");
+                waterdeck.Add(staryu1);
+                waterdeck.Add(staryu2);
+                waterdeck.Add(starmie);
+                waterdeck.Add(starmie_EX);
+                waterdeck.Add(articuno_EX1);
+                waterdeck.Add(articuno_EX2);
+                waterdeck.Add(magikarp);
+                waterdeck.Add(gyarados_EX);
+                waterdeck.Add(buizel1);
+                waterdeck.Add(buizel2);
+                waterdeck.Add(floatzel1);
+                waterdeck.Add(floatzel2);
+                waterdeck.Add(tentacool1);
+                waterdeck.Add(tentacool2);
+                waterdeck.Add(tentacruel1);
+                waterdeck.Add(tentacruel2);
+                waterdeck.Add(bruxish1);
+                waterdeck.Add(bruxish2);
+                waterdeck.Add(lapras1);
+                waterdeck.Add(lapras2);
 
                 bool deckchosen = false;
                 while (deckchosen == false)
@@ -316,27 +376,6 @@ namespace pokemontcg
                         decklist.Add(dhelmise_EX2);
                         decklist.Add(heracross);
                         decklist.Add(heracross2);
-
-                        grassdeck.Add(scyther);
-                        grassdeck.Add(oddish1);
-                        grassdeck.Add(oddish2);
-                        grassdeck.Add(gloom);
-                        grassdeck.Add(gloom2);
-                        grassdeck.Add(bellossom);
-                        grassdeck.Add(bellossom2);
-                        grassdeck.Add(combee);
-                        grassdeck.Add(combee2);
-                        grassdeck.Add(vespiquen);
-                        grassdeck.Add(sprigatito);
-                        grassdeck.Add(sprigatito2);
-                        grassdeck.Add(floragato);
-                        grassdeck.Add(floragato2);
-                        grassdeck.Add(meowscarada);
-                        grassdeck.Add(meowscarada2);
-                        grassdeck.Add(dhelmise_EX);
-                        grassdeck.Add(dhelmise_EX2);
-                        grassdeck.Add(heracross);
-                        grassdeck.Add(heracross2);
                         deckchosen = true;
                         deckelemental = "grass";
                         deckelement = 1;
@@ -364,27 +403,6 @@ namespace pokemontcg
                         decklist.Add(fire_tauros2);
                         decklist.Add(oricorio);
                         decklist.Add(oricorio2);
-
-                        firedeck.Add(charmander1);
-                        firedeck.Add(charmander2);
-                        firedeck.Add(charmeleon1);
-                        firedeck.Add(charmeleon2);
-                        firedeck.Add(charizard_EX1);
-                        firedeck.Add(charizard_EX2);
-                        firedeck.Add(heatmor1);
-                        firedeck.Add(heatmor2);
-                        firedeck.Add(houndour1);
-                        firedeck.Add(houndour2);
-                        firedeck.Add(houndoom1);
-                        firedeck.Add(houndoom2);
-                        firedeck.Add(magmar1);
-                        firedeck.Add(magmar2);
-                        firedeck.Add(magmortar1);
-                        firedeck.Add(magmortar2);
-                        firedeck.Add(fire_tauros1);
-                        firedeck.Add(fire_tauros2);
-                        firedeck.Add(oricorio);
-                        firedeck.Add(oricorio2);
                         deckchosen = true;
                         deckelemental = "fire";
                         deckelement = 2;
@@ -412,27 +430,6 @@ namespace pokemontcg
                         decklist.Add(bruxish2);
                         decklist.Add(lapras1);
                         decklist.Add(lapras2);
-
-                        waterdeck.Add(staryu1);
-                        waterdeck.Add(staryu2);
-                        waterdeck.Add(starmie);
-                        waterdeck.Add(starmie_EX);
-                        waterdeck.Add(articuno_EX1);
-                        waterdeck.Add(articuno_EX2);
-                        waterdeck.Add(magikarp);
-                        waterdeck.Add(gyarados_EX);
-                        waterdeck.Add(buizel1);
-                        waterdeck.Add(buizel2);
-                        waterdeck.Add(floatzel1);
-                        waterdeck.Add(floatzel2);
-                        waterdeck.Add(tentacool1);
-                        waterdeck.Add(tentacool2);
-                        waterdeck.Add(tentacruel1);
-                        waterdeck.Add(tentacruel2);
-                        waterdeck.Add(bruxish1);
-                        waterdeck.Add(bruxish2);
-                        waterdeck.Add(lapras1);
-                        waterdeck.Add(lapras2);
                         deckchosen = true;
                         deckelemental = "water";
                         deckelement = 3;
@@ -491,27 +488,6 @@ namespace pokemontcg
                     enemylist.Add(dhelmise_EX2);
                     enemylist.Add(heracross);
                     enemylist.Add(heracross2);
-
-                    grassdeck.Add(scyther);
-                    grassdeck.Add(oddish1);
-                    grassdeck.Add(oddish2);
-                    grassdeck.Add(gloom);
-                    grassdeck.Add(gloom2);
-                    grassdeck.Add(bellossom);
-                    grassdeck.Add(bellossom2);
-                    grassdeck.Add(combee);
-                    grassdeck.Add(combee2);
-                    grassdeck.Add(vespiquen);
-                    grassdeck.Add(sprigatito);
-                    grassdeck.Add(sprigatito2);
-                    grassdeck.Add(floragato);
-                    grassdeck.Add(floragato2);
-                    grassdeck.Add(meowscarada);
-                    grassdeck.Add(meowscarada2);
-                    grassdeck.Add(dhelmise_EX);
-                    grassdeck.Add(dhelmise_EX2);
-                    grassdeck.Add(heracross);
-                    grassdeck.Add(heracross2);
                 }
                 else if (deckchooser == 1)
                 {
@@ -535,27 +511,6 @@ namespace pokemontcg
                     enemylist.Add(fire_tauros2);
                     enemylist.Add(oricorio);
                     enemylist.Add(oricorio2);
-
-                    firedeck.Add(charmander1);
-                    firedeck.Add(charmander2);
-                    firedeck.Add(charmeleon1);
-                    firedeck.Add(charmeleon2);
-                    firedeck.Add(charizard_EX1);
-                    firedeck.Add(charizard_EX2);
-                    firedeck.Add(heatmor1);
-                    firedeck.Add(heatmor2);
-                    firedeck.Add(houndour1);
-                    firedeck.Add(houndour2);
-                    firedeck.Add(houndoom1);
-                    firedeck.Add(houndoom2);
-                    firedeck.Add(magmar1);
-                    firedeck.Add(magmar2);
-                    firedeck.Add(magmortar1);
-                    firedeck.Add(magmortar2);
-                    firedeck.Add(fire_tauros1);
-                    firedeck.Add(fire_tauros2);
-                    firedeck.Add(oricorio);
-                    firedeck.Add(oricorio2);
                 }
                 else if (deckchooser == 2)
                 {
@@ -579,27 +534,6 @@ namespace pokemontcg
                     enemylist.Add(bruxish2);
                     enemylist.Add(lapras1);
                     enemylist.Add(lapras2);
-
-                    waterdeck.Add(staryu1);
-                    waterdeck.Add(staryu2);
-                    waterdeck.Add(starmie);
-                    waterdeck.Add(starmie_EX);
-                    waterdeck.Add(articuno_EX1);
-                    waterdeck.Add(articuno_EX2);
-                    waterdeck.Add(magikarp);
-                    waterdeck.Add(gyarados_EX);
-                    waterdeck.Add(buizel1);
-                    waterdeck.Add(buizel2);
-                    waterdeck.Add(floatzel1);
-                    waterdeck.Add(floatzel2);
-                    waterdeck.Add(tentacool1);
-                    waterdeck.Add(tentacool2);
-                    waterdeck.Add(tentacruel1);
-                    waterdeck.Add(tentacruel2);
-                    waterdeck.Add(bruxish1);
-                    waterdeck.Add(bruxish2);
-                    waterdeck.Add(lapras1);
-                    waterdeck.Add(lapras2);
                 }
                 List<Pokemon> hand = new List<Pokemon>();
                 List<Pokemon> enemyhand = new List<Pokemon>();
@@ -608,6 +542,7 @@ namespace pokemontcg
                 {               //player loop
                     do
                     {
+                        hand.Clear();
                         if (deckelemental == "grass")
                         {
                             decklist = grassdeck;
@@ -620,9 +555,6 @@ namespace pokemontcg
                         {
                             decklist = waterdeck;
                         }
-                        hand.Clear();
-                        cardrawer = rng.Next(pcardsleft);
-                        hand.Add(DrawCard(decklist, cardrawer, rng));
                         cardrawer = rng.Next(pcardsleft);
                         hand.Add(DrawCard(decklist, cardrawer, rng));
                         cardrawer = rng.Next(pcardsleft);
@@ -634,7 +566,7 @@ namespace pokemontcg
                         cardrawer = rng.Next(pcardsleft);
                         removenulls(enemyhand, hand);
                     }
-                    while (hand.Any(p => p.stage == 0));
+                    while (!hand.Any(p => p.stage == 0));
                     if (hand.Any(p => p.stage == 0))
                     {
                         gtg = true;
@@ -650,20 +582,34 @@ namespace pokemontcg
                 gtg = false;
                 while (gtg == false)
                 {               //enemy loop
-                    enemyhand.Clear();
-                    cardrawer = rng.Next(ecardsleft);
-                    enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
-                    cardrawer = rng.Next(ecardsleft);
-                    enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
-                    cardrawer = rng.Next(ecardsleft);
-                    enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
-                    cardrawer = rng.Next(ecardsleft);
-                    enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
-                    cardrawer = rng.Next(ecardsleft);
-                    enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
-                    cardrawer = rng.Next(ecardsleft);
-                    removenulls(enemyhand, hand);
-                    if (enemyhand.Any(p => p.stage == 0))
+                    do
+                    {
+                        enemyhand.Clear();
+                        if (deckchooser == 0)
+                        {
+                            enemylist = grassdeck;
+                        }
+                        if (deckchooser == 1)
+                        {
+                            enemylist = firedeck;
+                        }
+                        if (deckchooser == 2)
+                        {
+                            enemylist = waterdeck;
+                        }
+                        cardrawer = rng.Next(ecardsleft);
+                        enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
+                        cardrawer = rng.Next(ecardsleft);
+                        enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
+                        cardrawer = rng.Next(ecardsleft);
+                        enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
+                        cardrawer = rng.Next(ecardsleft);
+                        enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
+                        cardrawer = rng.Next(ecardsleft);
+                        removenulls(enemyhand, hand);
+                    }
+                    while (enemyhand.Any(p => p.stage == 0));
+                    if (!enemyhand.Any(p => p.stage == 0))
                     {
                         gtg = true;
                     }
@@ -719,7 +665,7 @@ namespace pokemontcg
 
                 //enemy turn
                 Pokemon ecardplaced = null;
-                for (int i = 0; i < enemyhand.Count; i++)
+                for (int i = 0;  i < enemyhand.Count; i++)
                 {
                     if (enemyhand[i].stage == 0)
                     {
@@ -755,11 +701,11 @@ namespace pokemontcg
                             Console.WriteLine();
                             Console.WriteLine("select any card in your hand, or press a letter to go back.");
                             input = Console.ReadLine();
-                            if (int.TryParse(input, out inputchecker) && int.Parse(input) < hand.Count && inputchecker >=0)
+                            if (int.TryParse(input, out inputchecker) && int.Parse(input) < hand.Count)
                             {
                                 int iinput = int.Parse(input);
                                 Console.WriteLine(hand[iinput].name + ": " + hand[iinput].energy + " energy " + hand[iinput].hp + " hp " + hand[iinput].type + " "
-                                + "retreat cost " + hand[iinput].retreatcost + " stage " + hand[iinput].stage + "evolves from: " + hand[iinput].evolvesfrom);
+                                + "retreat cost " + hand[iinput].retreatcost + " stage " + hand[iinput].stage + " evolves from: " + hand[iinput].evolvesfrom);
                                 Console.WriteLine("press 1 to play to bench or evolve. press anything else to go back.");
                                 input = Console.ReadLine();
                                 if (int.TryParse(input, out inputchecker))
@@ -771,12 +717,7 @@ namespace pokemontcg
                                             pbench.Add(hand[iinput]);
                                             hand.RemoveAt(iinput);
                                         }
-                                        else
-                                        {
-                                            Console.WriteLine("hand is full or card cannot be played. Press a key to continue.");
-                                            char whyexistatall = Console.ReadKey().KeyChar;
-                                        }
-                                        if (hand[iinput].stage == 1) //evolve logic
+                                        else if (hand[iinput].stage == 1) //evolve logic
                                         {
                                             for (int j = 0; j < pbench.Count; j++)
                                             {
@@ -786,9 +727,14 @@ namespace pokemontcg
                                                     hand.RemoveAt(iinput);
                                                     break; // keeps from evolving 2 of the same card with one higher stage
                                                 }
+                                                else
+                                                {
+                                                    Console.WriteLine("does not work");
+                                                    char whyexistatall = Console.ReadKey().KeyChar;
+                                                }
                                             }
                                         }
-                                        if (hand[iinput].stage == 2) //evolve logic
+                                        else if (hand[iinput].stage == 2) //evolve logic
                                         {
                                             for (int j = 0; j < pbench.Count; j++)
                                             {
@@ -798,7 +744,17 @@ namespace pokemontcg
                                                     hand.RemoveAt(iinput);
                                                     break; // keeps from evolving 2 of the same card with one higher stage
                                                 }
+                                                else
+                                                {
+                                                    Console.WriteLine("does not work");
+                                                    char whyexistatall = Console.ReadKey().KeyChar;
+                                                }
                                             }
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("hand is full or card cannot be played. Press a key to continue.");
+                                            char whyexistatall = Console.ReadKey().KeyChar;
                                         }
                                     }
                                 }
@@ -914,6 +870,7 @@ namespace pokemontcg
                         else
                         {
                             Console.WriteLine("please put in 1 through 4.");
+                            char whyexistatall = Console.ReadKey().KeyChar;
                         }
                     }
                     deadcheck(pactivepokemon, pbench, gamend, playerwins);
