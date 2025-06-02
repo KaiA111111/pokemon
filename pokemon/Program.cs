@@ -25,6 +25,7 @@ namespace pokemontcg
        5/29        finished the player turn core loop, working on enemy core turn loop as well as some more hand and bench logic (confusing ugh)
                    working on evolving as well
        5/30        ironing out bugs, glitches, and exceptions
+       6/2         working on bugs, adding points, and improving computer smartness
      */
     static internal class Program
     {
@@ -944,12 +945,23 @@ namespace pokemontcg
                                 }
                             }
                         }
-                        if (eactivepokemon.energy >= eactivepokemon.atkdata.energycost + eactivepokemon.retreatcost)
+                        if (eactivepokemon.energy >= eactivepokemon.atkdata.energycost + eactivepokemon.retreatcost)//energy attach
                         {
                             Pokemon mosthp = Mosthpfinder(ebench);
-                            for (int i = 
+                            for (int i = ebench.Count - 1; i >= 0; i--)
+                            {
+                                if (ebench[i].energy < ebench[i].atkdata.energycost + ebench[i].retreatcost && ebench[i] == mosthp)
+                                {
+                                    ebench[i].energy++;
+                                    break;
+                                }
+                            }
                         }
-                        if (eactivepokemon.hp <= 20 && eactivepokemon.energy >= eactivepokemon.retreatcost) // retreat if hp is low
+                        else
+                        {
+                            eactivepokemon.energy++;
+                        }
+                        if (eactivepokemon.hp <= pactivepokemon.atkdata.damage && eactivepokemon.energy >= eactivepokemon.retreatcost) // retreat if hp is low
                         {
                             eactivepokemon.energy -= eactivepokemon.retreatcost;
                             Pokemon mosthponbench = Mosthpfinder(ebench);
