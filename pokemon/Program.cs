@@ -903,7 +903,6 @@ namespace pokemontcg
                     while (!playerturn) //enemy turn
                     {
                         check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
-                        eactivepokemon.energy++;
                         cardrawer = rng.Next(ecardsleft);
                         enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                         cardrawer = rng.Next(ecardsleft);
@@ -944,6 +943,11 @@ namespace pokemontcg
                                     }
                                 }
                             }
+                        }
+                        if (eactivepokemon.energy >= eactivepokemon.atkdata.energycost + eactivepokemon.retreatcost)
+                        {
+                            Pokemon mosthp = Mosthpfinder(ebench);
+                            for (int i = 
                         }
                         if (eactivepokemon.hp <= 20 && eactivepokemon.energy >= eactivepokemon.retreatcost) // retreat if hp is low
                         {
