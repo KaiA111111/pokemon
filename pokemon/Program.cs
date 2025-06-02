@@ -28,10 +28,12 @@ namespace pokemontcg
      */
     static internal class Program
     {
-        static void deadcheck(Pokemon pactivepokemon, List<Pokemon> pbench, bool gamend, bool playerwins)
-        {
+        static void check(Pokemon pactivepokemon, List<Pokemon> pbench, int ppoints, int epoints,
+            Pokemon eactivepokemon, List<Pokemon> ebench, bool gamend, bool playerwins)
+        { //player logic
             if (pactivepokemon.hp <= 0 && pbench.Count >0)
             {
+                ppoints++;
                 Console.WriteLine("your pokemon has died. please select a pokemon from your bench.");
                 Console.Write("Bench: ");
                 for (int i = 0; i < 3; i++)
@@ -61,6 +63,29 @@ namespace pokemontcg
             {
                 gamend = true;
                 playerwins = false;
+            }
+            //enemy logic
+            if (eactivepokemon.hp <= 0 && ebench.Count > 0)
+            {
+                epoints++;
+                if (ebench.Count > 0)
+                {
+                    Pokemon mosthponbench = Mosthpfinder(ebench);
+                    eactivepokemon = mosthponbench;
+                    for (int i = ebench.Count - 1; i >= 0; i++)
+                    {
+                        if (mosthponbench == ebench[i])
+                        {
+                            ebench.RemoveAt(i);
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                gamend = true;
+                playerwins = true;
             }
         }
         static Pokemon Mosthpfinder(List<Pokemon> ebench)
@@ -608,8 +633,8 @@ namespace pokemontcg
                         cardrawer = rng.Next(ecardsleft);
                         removenulls(enemyhand, hand);
                     }
-                    while (enemyhand.Any(p => p.stage == 0));
-                    if (!enemyhand.Any(p => p.stage == 0))
+                    while (!enemyhand.Any(p => p.stage == 0));
+                    if (enemyhand.Any(p => p.stage == 0))
                     {
                         gtg = true;
                     }
@@ -682,13 +707,13 @@ namespace pokemontcg
                 while (!gamend)
                 {
                     bool playerturn = true;
+                    pactivepokemon.energy++;
+                    cardrawer = rng.Next(pcardsleft);
+                    hand.Add(DrawCard(decklist, cardrawer, rng));
+                    cardrawer = rng.Next(pcardsleft);
+                    removenulls(enemyhand, hand);
                     while (playerturn == true)
                     {
-                        pactivepokemon.energy++;
-                        cardrawer = rng.Next(pcardsleft);
-                        hand.Add(DrawCard(decklist, cardrawer, rng));
-                        cardrawer = rng.Next(pcardsleft);
-                        removenulls(enemyhand, hand);
                         writescreen(enemyhand, epoints, ebench, eactivepokemon, pactivepokemon, hand, pbench, ppoints);
                         string input = Console.ReadLine();
                         if (input == "1") //hand
@@ -872,10 +897,12 @@ namespace pokemontcg
                             Console.WriteLine("please put in 1 through 4.");
                             char whyexistatall = Console.ReadKey().KeyChar;
                         }
+                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
                     }
-                    deadcheck(pactivepokemon, pbench, gamend, playerwins);
+                    check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
                     while (!playerturn) //enemy turn
                     {
+                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
                         eactivepokemon.energy++;
                         cardrawer = rng.Next(ecardsleft);
                         enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
@@ -895,7 +922,7 @@ namespace pokemontcg
                             {
                                 for (int j = 0; j < ebench.Count; j++)
                                 {
-                                    if (ebench[j].stage == 0 && enemyhand[i].name == ebench[j].evolvesfrom)
+                                    if (ebench[j].stage == 0 && enemyhand[i].evolvesfrom == ebench[j].name)
                                     {
                                         ebench.Add(enemyhand[i]);
                                         enemyhand.RemoveAt(i);
@@ -908,7 +935,7 @@ namespace pokemontcg
                             {
                                 for (int j = 0; j < ebench.Count; j++)
                                 {
-                                    if (ebench[j].stage == 1 && enemyhand[i].name == ebench[j].evolvesfrom)
+                                    if (ebench[j].stage == 1 && enemyhand[i].evolvesfrom == ebench[j].name)
                                     {
                                         ebench.Add(enemyhand[i]);
                                         enemyhand.RemoveAt(i);
@@ -928,14 +955,18 @@ namespace pokemontcg
                         if (eactivepokemon.energy >= eactivepokemon.atkdata.energycost) // attack
                         {
                             DoAttack(eactivepokemon, pactivepokemon);
+                            Console.WriteLine("Enemy attacks and does " + eactivepokemon.atkdata.damage + " damage!");
+                            char whyevenexistatall = Console.ReadKey().KeyChar;
                             playerturn = true;
                         }
                         else //if you cant attack end turn
                         {
                             playerturn = true;
                         }
+                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
                     }
-                    
+                    check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
+
                 }
             }
         }
