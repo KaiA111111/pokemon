@@ -65,6 +65,10 @@ namespace pokemontcg
                 gamend = true;
                 playerwins = false;
             }
+            if (ppoints >= 3)
+            {
+
+            }
             //enemy logic
             if (eactivepokemon.hp <= 0 && ebench.Count > 0)
             {
@@ -161,8 +165,8 @@ namespace pokemontcg
             }
             Console.WriteLine();
             Console.WriteLine("Your Hand: " + hand.Count + "    Points:" + ppoints);
-            Console.WriteLine("Hand     Bench     Active     End Turn");
-            Console.WriteLine("1        2         3          4       ");
+            Console.WriteLine("Hand     Bench     Active     End Turn     Energy");
+            Console.WriteLine("1        2         3          4            5");
         }
         static void DoAttack(Pokemon attackingpokemon, Pokemon enemyactive)
         {
@@ -664,11 +668,11 @@ namespace pokemontcg
                     Console.Write(hand[i].name + ", ");
                 }
                 Console.WriteLine();
-                Console.WriteLine("select 0 through 4 to choose your active pokemon, left to right 0 to 4.");
+                Console.WriteLine("select 0 through 4 to choose your active pokemon, left to right 0 to 3.");
                 while (pactivepokemon == null)
                 {
                     string input = Console.ReadLine();
-                    if (input == "0" || input == "1" || input == "2" || input == "3" || input == "4")
+                    if (input == "0" || input == "1" || input == "2" || input == "3")
                     {
                         chosenactive = int.Parse(input);
                         if (hand[chosenactive].stage == 0)
@@ -679,12 +683,12 @@ namespace pokemontcg
                         }
                         else
                         {
-                            Console.WriteLine("please input a number that is a basic pokemon 0 through 4.");
+                            Console.WriteLine("please input a number that is a basic pokemon 0 through 3.");
                         }
                     }
                     else
                     {
-                        Console.WriteLine("please input a number 0 through 4.");
+                        Console.WriteLine("please input a number 0 through 3");
                     }
                 }
 
@@ -893,9 +897,44 @@ namespace pokemontcg
                         {
                             playerturn = false;
                         }
+                        else if (input == "5")
+                        {
+                            Console.WriteLine("select a pokemon to attach. 1 for active, 2 to select farther into bench.");
+                            Console.WriteLine($"Active Pokémon: {pactivepokemon.name}, Type: {pactivepokemon.type}, HP: {pactivepokemon.hp}, " +
+                                              $"Retreat Cost: {pactivepokemon.retreatcost}, Stage: {pactivepokemon.stage}, Energy: {pactivepokemon.energy}" +
+                                              $" Attack: {pactivepokemon.atkdata.attackname}, Damage: {pactivepokemon.atkdata.damage} " +
+                                              $"         Cost: {pactivepokemon.atkdata.energycost}       Effect: {pactivepokemon.atkdata.effect}");
+                            Console.WriteLine();
+                            Console.WriteLine();
+                            for (int i = 0; i < pbench.Count; i++)
+                            {
+                                Console.Write(i.ToString().PadRight(15));
+                            }
+                            Console.WriteLine();
+                            input = Console.ReadLine();
+                            if (input == "1")
+                            {
+                                pactivepokemon.energy++;
+                            }
+                            else if (input == "2")
+                            {
+                                Console.WriteLine("Your Bench: ");
+                                for (int i = 0; i < pbench.Count; i++)
+                                {
+                                    Console.Write(pbench[i].name.PadRight(15));
+                                }
+                                Console.WriteLine("Select a character, 0 to 2.");
+                                input = Console.ReadLine();
+                                int intput;
+                                if (int.TryParse (input, out intput)
+                                {
+
+                                }
+                            }
+                        }
                         else
                         {
-                            Console.WriteLine("please put in 1 through 4.");
+                            Console.WriteLine("please put in 1 through 5.");
                             char whyexistatall = Console.ReadKey().KeyChar;
                         }
                         check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
@@ -982,7 +1021,6 @@ namespace pokemontcg
                         check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
                     }
                     check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
-
                 }
             }
         }
