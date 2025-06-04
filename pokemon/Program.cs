@@ -712,13 +712,13 @@ namespace pokemontcg
                 while (!gamend)
                 {
                     bool playerturn = true;
-                    pactivepokemon.energy++;
                     cardrawer = rng.Next(pcardsleft);
                     hand.Add(DrawCard(decklist, cardrawer, rng));
                     cardrawer = rng.Next(pcardsleft);
                     removenulls(enemyhand, hand);
-                    while (playerturn == true)
+                    while (playerturn == true) //player turn
                     {
+                        int energyleft = 1;
                         writescreen(enemyhand, epoints, ebench, eactivepokemon, pactivepokemon, hand, pbench, ppoints);
                         string input = Console.ReadLine();
                         if (input == "1") //hand
@@ -740,12 +740,15 @@ namespace pokemontcg
                                 input = Console.ReadLine();
                                 if (int.TryParse(input, out inputchecker))
                                 {
-                                    if (iinput == 1)
+                                    if (inputchecker == 1)
                                     {
+                                        bool evolvedsucc = false;
                                         if (pbench.Count < 3 && hand[iinput].stage == 0) //play a card
                                         {
                                             pbench.Add(hand[iinput]);
                                             hand.RemoveAt(iinput);
+                                            evolvedsucc = true;
+                                            iinput = -1;
                                         }
                                         else if (hand[iinput].stage == 1) //evolve logic
                                         {
@@ -755,12 +758,8 @@ namespace pokemontcg
                                                 {
                                                     pbench[j] = hand[iinput];
                                                     hand.RemoveAt(iinput);
+                                                    evolvedsucc = true;
                                                     break; // keeps from evolving 2 of the same card with one higher stage
-                                                }
-                                                else
-                                                {
-                                                    Console.WriteLine("does not work");
-                                                    char whyexistatall = Console.ReadKey().KeyChar;
                                                 }
                                             }
                                         }
@@ -772,12 +771,8 @@ namespace pokemontcg
                                                 {
                                                     pbench[j] = hand[iinput];
                                                     hand.RemoveAt(iinput);
+                                                    evolvedsucc = true;
                                                     break; // keeps from evolving 2 of the same card with one higher stage
-                                                }
-                                                else
-                                                {
-                                                    Console.WriteLine("does not work");
-                                                    char whyexistatall = Console.ReadKey().KeyChar;
                                                 }
                                             }
                                         }
@@ -786,8 +781,18 @@ namespace pokemontcg
                                             Console.WriteLine("hand is full or card cannot be played. Press a key to continue.");
                                             char whyexistatall = Console.ReadKey().KeyChar;
                                         }
+                                        if (!evolvedsucc)
+                                        {
+                                            Console.WriteLine("does not work");
+                                            char whyexistatall = Console.ReadKey().KeyChar;
+                                        }
                                     }
                                 }
+                            }
+                            else
+                            {
+                                Console.WriteLine("select a hand number.");
+                                char whyexistatall = Console.ReadKey().KeyChar;
                             }
                         }
                         else if (input == "2") //bench
@@ -899,37 +904,71 @@ namespace pokemontcg
                         }
                         else if (input == "5")
                         {
-                            Console.WriteLine("select a pokemon to attach. 1 for active, 2 to select farther into bench.");
-                            Console.WriteLine($"Active Pokémon: {pactivepokemon.name}, Type: {pactivepokemon.type}, HP: {pactivepokemon.hp}, " +
-                                              $"Retreat Cost: {pactivepokemon.retreatcost}, Stage: {pactivepokemon.stage}, Energy: {pactivepokemon.energy}" +
-                                              $" Attack: {pactivepokemon.atkdata.attackname}, Damage: {pactivepokemon.atkdata.damage} " +
-                                              $"         Cost: {pactivepokemon.atkdata.energycost}       Effect: {pactivepokemon.atkdata.effect}");
-                            Console.WriteLine();
-                            Console.WriteLine();
-                            for (int i = 0; i < pbench.Count; i++)
+                            if (energyleft == 1)
                             {
-                                Console.Write(i.ToString().PadRight(15));
-                            }
-                            Console.WriteLine();
-                            input = Console.ReadLine();
-                            if (input == "1")
-                            {
-                                pactivepokemon.energy++;
-                            }
-                            else if (input == "2")
-                            {
-                                Console.WriteLine("Your Bench: ");
+                                Console.WriteLine("select a pokemon to attach. 1 for active, 2 to select farther into bench.");
+                                Console.WriteLine($"Active Pokémon: {pactivepokemon.name}, Type: {pactivepokemon.type}, HP: {pactivepokemon.hp}, " +
+                                                  $"Retreat Cost: {pactivepokemon.retreatcost}, Stage: {pactivepokemon.stage}, Energy: {pactivepokemon.energy}" +
+                                                  $" Attack: {pactivepokemon.atkdata.attackname}, Damage: {pactivepokemon.atkdata.damage} " +
+                                                  $"         Cost: {pactivepokemon.atkdata.energycost}       Effect: {pactivepokemon.atkdata.effect}");
+                                Console.WriteLine();
+                                Console.WriteLine();
                                 for (int i = 0; i < pbench.Count; i++)
                                 {
-                                    Console.Write(pbench[i].name.PadRight(15));
+                                    Console.Write(i.ToString().PadRight(15));
                                 }
-                                Console.WriteLine("Select a character, 0 to 2.");
+                                Console.WriteLine();
                                 input = Console.ReadLine();
-                                int intput;
-                                if (int.TryParse (input, out intput)
+                                if (input == "1")
                                 {
-
+                                    pactivepokemon.energy++;
+                                    energyleft = 0;
                                 }
+                                else if (input == "2")
+                                {
+                                    Console.WriteLine("Your Bench: ");
+                                    for (int i = 0; i < pbench.Count; i++)
+                                    {
+                                        Console.Write(pbench[i].name.PadRight(15));
+                                    }
+                                    Console.WriteLine();
+                                    Console.WriteLine("Select a character, 0 to 2.");
+                                    input = Console.ReadLine();
+                                    int intput = -1;
+                                    if (int.TryParse(input, out intput))
+                                    {
+                                        if (intput == 0 || intput == 1 || intput == 2)
+                                        {
+                                            if (intput < pbench.Count)
+                                            {
+                                                Console.WriteLine("attach energy to this pokemon? Y/N");
+                                                Console.Write(pbench[intput].name + "    damage: " + pbench[intput].atkdata.damage + ", cost: " + pbench[intput].atkdata.energycost + ", energy: " + pbench[intput].energy);
+                                            }
+                                            string attachoice = Console.ReadLine();
+                                            if (attachoice == "Y" || attachoice == "y")
+                                            {
+                                                pbench[intput].energy++;
+                                            }
+                                            else if (attachoice == "N" || attachoice == "n")
+                                            {
+
+                                            }
+                                            else
+                                            {
+                                                Console.WriteLine("please only put in Y or N.");
+                                            }
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("please only input a benched pokemon's number.");
+                                            char whyevenexistatall = Console.ReadKey().KeyChar;
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("you have already attached energy this turn");
                             }
                         }
                         else
