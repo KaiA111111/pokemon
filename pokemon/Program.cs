@@ -26,38 +26,50 @@ namespace pokemontcg
                    working on evolving as well
        5/30        ironing out bugs, glitches, and exceptions
        6/2         working on bugs, adding points, and improving computer smartness
+       6/4         evolve and energy attach are done, working on death mechanic
+       6/5         check and reset logic, i should be done pretty soon
+
      */
     static internal class Program
     {
-        static void check(Pokemon pactivepokemon, List<Pokemon> pbench, int ppoints, int epoints,
-            Pokemon eactivepokemon, List<Pokemon> ebench, bool gamend, bool playerwins)
+        static void check(
+        Pokemon pactivepokemon, List<Pokemon> pbench, int ppoints, int epoints,
+        Pokemon eactivepokemon, List<Pokemon> ebench, bool gamend, bool playerwins,
+        List<Pokemon> hand, List<Pokemon> enemyhand, List<Pokemon> decklist, List<Pokemon> enemylist,
+        int pcardsleft, int ecardsleft, bool decklocked)
         { //player logic
             if (pactivepokemon.hp <= 0 && pbench.Count >0)
             {
-                ppoints++;
-                Console.WriteLine("your pokemon has died. please select a pokemon from your bench.");
-                Console.Write("Bench: ");
-                for (int i = 0; i < 3; i++)
+                epoints++;
+                while (pactivepokemon.hp <= 0)
                 {
-                    if (i < pbench.Count && pbench[i] != null)
-                        Console.Write(pbench[i].name);
-                    else
-                        Console.Write("---");
-                    if (i < 2) Console.Write(", ");
-                }
-                Console.WriteLine();
-                string input = Console.ReadLine();
-                if (input == "0" && pbench.Count >= 1)
-                {
-                    pbench[0] = pactivepokemon;
-                }
-                if (input == "1" && pbench.Count >= 2)
-                {
-                    pbench[1] = pactivepokemon;
-                }
-                if (input == "2" && pbench.Count >= 3)
-                {
-                    pbench[2] = pactivepokemon;
+                    Console.WriteLine("your pokemon has died. please select a pokemon from your bench.");
+                    Console.Write("Bench: ");
+                    for (int i = 0; i < 3; i++)
+                    {
+                        if (i < pbench.Count && pbench[i] != null)
+                            Console.Write(pbench[i].name);
+                        else
+                            Console.Write("---");
+                        if (i < 2) Console.Write(", ");
+                    }
+                    Console.WriteLine();
+                    string input = Console.ReadLine();
+                    if (input == "0" && pbench.Count >= 1)
+                    {
+                        pbench[0] = pactivepokemon;
+                        pbench.RemoveAt(0);
+                    }
+                    if (input == "1" && pbench.Count >= 2)
+                    {
+                        pbench[1] = pactivepokemon;
+                        pbench.RemoveAt(1);
+                    }
+                    if (input == "2" && pbench.Count >= 3)
+                    {
+                        pbench[2] = pactivepokemon;
+                        pbench.RemoveAt(2);
+                    }
                 }
             }
             else
@@ -67,22 +79,41 @@ namespace pokemontcg
             }
             if (ppoints >= 3)
             {
-
+                while (ppoints >= 3)
+                {
+                    Console.WriteLine("you win! Restart? Y/N");
+                    string yn = Console.ReadLine();
+                    if (yn == "Y" || yn == "y")
+                    {
+                        //reset();
+                    }
+                    else if (yn == "N" || yn == "N")
+                    {
+                        Environment.Exit(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("only put in Y or N.");
+                    }
+                }
             }
             //enemy logic
             if (eactivepokemon.hp <= 0 && ebench.Count > 0)
             {
-                epoints++;
+                ppoints++;
                 if (ebench.Count > 0)
                 {
                     Pokemon mosthponbench = Mosthpfinder(ebench);
                     eactivepokemon = mosthponbench;
-                    for (int i = ebench.Count - 1; i >= 0; i++)
+                    if (mosthponbench != null && ebench.Count > 0)
                     {
-                        if (mosthponbench == ebench[i])
+                        for (int i = ebench.Count - 1; i >= 0; i--)
                         {
-                            ebench.RemoveAt(i);
-                            break;
+                            if (mosthponbench == ebench[i])
+                            {
+                                ebench.RemoveAt(i);
+                                break;
+                            }
                         }
                     }
                 }
@@ -92,6 +123,47 @@ namespace pokemontcg
                 gamend = true;
                 playerwins = true;
             }
+            if (epoints >= 3)
+            {
+                while (epoints >= 3)
+                {
+                    Console.WriteLine("you lose! Restart? Y/N");
+                    string yn = Console.ReadLine();
+                    if (yn == "Y" || yn == "y")
+                    {
+                        ResetGame(ref ppoints, ref epoints, ref pcardsleft, ref ecardsleft, ref decklocked, ref playerwins, ref gamend, 
+                            hand, enemyhand, pbench, ebench, decklist, enemylist, ref pactivepokemon, ref eactivepokemon);
+                    }
+                    else if (yn == "N" || yn == "N")
+                    {
+                        Environment.Exit(0);
+                    }
+                    else
+                    {
+                        Console.WriteLine("only put in Y or N.");
+                    }
+                }
+            }
+        }
+        static void ResetGame(ref int ppoints,ref int epoints,ref int pcardsleft,ref int ecardsleft,ref bool decklocked,ref bool playerwins,
+        ref bool gamend,List<Pokemon> hand,List<Pokemon> enemyhand,List<Pokemon> pbench,List<Pokemon> ebench,List<Pokemon> decklist,
+        List<Pokemon> enemylist,ref Pokemon pactivepokemon,ref Pokemon eactivepokemon)
+        {
+            ppoints = 0;
+            epoints = 0;
+            pcardsleft = 20;
+            ecardsleft = 20;
+            decklocked = false;
+            playerwins = false;
+            gamend = false;
+            hand.Clear();
+            enemyhand.Clear();
+            pbench.Clear();
+            ebench.Clear();
+            decklist.Clear();
+            enemylist.Clear();
+            pactivepokemon = null;
+            eactivepokemon = null;
         }
         static Pokemon Mosthpfinder(List<Pokemon> ebench)
         {
@@ -716,9 +788,9 @@ namespace pokemontcg
                     hand.Add(DrawCard(decklist, cardrawer, rng));
                     cardrawer = rng.Next(pcardsleft);
                     removenulls(enemyhand, hand);
+                    int energyleft = 1;
                     while (playerturn == true) //player turn
                     {
-                        int energyleft = 1;
                         writescreen(enemyhand, epoints, ebench, eactivepokemon, pactivepokemon, hand, pbench, ppoints);
                         string input = Console.ReadLine();
                         if (input == "1") //hand
@@ -742,36 +814,52 @@ namespace pokemontcg
                                 {
                                     if (inputchecker == 1)
                                     {
-                                        bool evolvedsucc = false;
                                         if (pbench.Count < 3 && hand[iinput].stage == 0) //play a card
                                         {
                                             pbench.Add(hand[iinput]);
                                             hand.RemoveAt(iinput);
-                                            evolvedsucc = true;
                                             iinput = -1;
                                         }
                                         else if (hand[iinput].stage == 1) //evolve logic
                                         {
+                                            if (pactivepokemon.stage == 0 && hand[iinput].evolvesfrom == pactivepokemon.name)
+                                            {
+                                                int energyon = eactivepokemon.energy;
+                                                pactivepokemon = hand[iinput];
+                                                hand.RemoveAt(iinput);
+                                                pactivepokemon.energy = energyon;
+                                                break; // keeps from evolving 2 of the same card with one higher stage
+                                            }
                                             for (int j = 0; j < pbench.Count; j++)
                                             {
                                                 if (pbench[j].stage == 0 && hand[iinput].evolvesfrom == pbench[j].name)
                                                 {
+                                                    int energyon = eactivepokemon.energy;
                                                     pbench[j] = hand[iinput];
                                                     hand.RemoveAt(iinput);
-                                                    evolvedsucc = true;
+                                                    pactivepokemon.energy = energyon;
                                                     break; // keeps from evolving 2 of the same card with one higher stage
                                                 }
                                             }
                                         }
                                         else if (hand[iinput].stage == 2) //evolve logic
                                         {
+                                            if (pactivepokemon.stage == 1 && hand[iinput].evolvesfrom == pactivepokemon.name)
+                                            {
+                                                int energyon = eactivepokemon.energy;
+                                                pactivepokemon = hand[iinput];
+                                                hand.RemoveAt(iinput);
+                                                pactivepokemon.energy = energyon;
+                                                break; // keeps from evolving 2 of the same card with one higher stage
+                                            }
                                             for (int j = 0; j < pbench.Count; j++)
                                             {
                                                 if (pbench[j].stage == 1 && hand[iinput].evolvesfrom == pbench[j].name)
                                                 {
+                                                    int energyon = eactivepokemon.energy;
                                                     pbench[j] = hand[iinput];
                                                     hand.RemoveAt(iinput);
-                                                    evolvedsucc = true;
+                                                    pactivepokemon.energy = energyon;
                                                     break; // keeps from evolving 2 of the same card with one higher stage
                                                 }
                                             }
@@ -779,11 +867,6 @@ namespace pokemontcg
                                         else
                                         {
                                             Console.WriteLine("hand is full or card cannot be played. Press a key to continue.");
-                                            char whyexistatall = Console.ReadKey().KeyChar;
-                                        }
-                                        if (!evolvedsucc)
-                                        {
-                                            Console.WriteLine("does not work");
                                             char whyexistatall = Console.ReadKey().KeyChar;
                                         }
                                     }
@@ -896,6 +979,11 @@ namespace pokemontcg
                                     DoAttack(pactivepokemon, eactivepokemon);
                                     playerturn = false;
                                 }
+                                else
+                                {
+                                    Console.WriteLine("cannot attack");
+                                    char whyevenexistatall = Console.ReadKey().KeyChar;
+                                }
                             }
                         }
                         else if (input == "4")
@@ -950,12 +1038,11 @@ namespace pokemontcg
                                                 pbench[intput].energy++;
                                             }
                                             else if (attachoice == "N" || attachoice == "n")
-                                            {
-
-                                            }
+                                            {}
                                             else
                                             {
                                                 Console.WriteLine("please only put in Y or N.");
+                                                char whyevenexistatall = Console.ReadKey().KeyChar;
                                             }
                                         }
                                         else
@@ -969,6 +1056,7 @@ namespace pokemontcg
                             else
                             {
                                 Console.WriteLine("you have already attached energy this turn");
+                                char whyevenexistatall = Console.ReadKey().KeyChar;
                             }
                         }
                         else
@@ -976,12 +1064,12 @@ namespace pokemontcg
                             Console.WriteLine("please put in 1 through 5.");
                             char whyexistatall = Console.ReadKey().KeyChar;
                         }
-                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
+                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                     }
-                    check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
+                    check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                     while (!playerturn) //enemy turn
                     {
-                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
+                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                         cardrawer = rng.Next(ecardsleft);
                         enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                         cardrawer = rng.Next(ecardsleft);
@@ -1000,12 +1088,24 @@ namespace pokemontcg
                             {
                                 for (int j = 0; j < ebench.Count; j++)
                                 {
-                                    if (ebench[j].stage == 0 && enemyhand[i].evolvesfrom == ebench[j].name)
+                                    if (eactivepokemon.stage == 0 && hand[iinput].evolvesfrom == pactivepokemon.name)
                                     {
-                                        ebench.Add(enemyhand[i]);
-                                        enemyhand.RemoveAt(i);
-                                        ebench.RemoveAt(j);
+                                        int energyon = eactivepokemon.energy;
+                                        pactivepokemon = hand[iinput];
+                                        hand.RemoveAt(iinput);
+                                        pactivepokemon.energy = energyon;
                                         break; // keeps from evolving 2 of the same card with one higher stage
+                                    }
+                                    for (int  = 0; j < pbench.Count; j++)
+                                    {
+                                        if (pbench[j].stage == 0 && hand[iinput].evolvesfrom == pbench[j].name)
+                                        {
+                                            int energyon = eactivepokemon.energy;
+                                            pbench[j] = hand[iinput];
+                                            hand.RemoveAt(iinput);
+                                            pactivepokemon.energy = energyon;
+                                            break; // keeps from evolving 2 of the same card with one higher stage
+                                        }
                                     }
                                 }
                             }
@@ -1046,6 +1146,7 @@ namespace pokemontcg
                             ebench.Add(eactivepokemon);
                             eactivepokemon = mosthponbench;
                         }
+                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                         if (eactivepokemon.energy >= eactivepokemon.atkdata.energycost) // attack
                         {
                             DoAttack(eactivepokemon, pactivepokemon);
@@ -1057,9 +1158,9 @@ namespace pokemontcg
                         {
                             playerturn = true;
                         }
-                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
+                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                     }
-                    check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins);
+                    check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                 }
             }
         }
