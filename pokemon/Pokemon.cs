@@ -11,6 +11,7 @@ namespace pokemontcg
         public string name { get; set; }
         public string type { get; set; }
         public int hp { get; set; }
+        public int maxhp {get; set; }
         public int retreatcost { get; set; }
         public string weakness { get; set; }
         public int stage { get; set; }
@@ -18,7 +19,7 @@ namespace pokemontcg
         public attackdata atkdata { get; set; }
         public string evolvesfrom { get; set; }
 
-        public Pokemon(string Name, string Type, int Hp, int Retreatcost, string Weakness, int Stage, int Energy, attackdata Atkdata, string Evolvesfrom)
+        public Pokemon(string Name, string Type, int Hp, int MaxHP, int Retreatcost, string Weakness, int Stage, int Energy, attackdata Atkdata, string Evolvesfrom)
         {
             name = Name;
             type = Type;
@@ -29,6 +30,7 @@ namespace pokemontcg
             energy = Energy;
             atkdata = Atkdata;
             evolvesfrom = Evolvesfrom;
+            maxhp = MaxHP;
         }
     }
 }

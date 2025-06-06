@@ -33,7 +33,7 @@ namespace pokemontcg
     static internal class Program
     {
         static void check(
-        Pokemon pactivepokemon, List<Pokemon> pbench, int ppoints, int epoints,
+        ref Pokemon pactivepokemon, List<Pokemon> pbench, int ppoints, int epoints,
         Pokemon eactivepokemon, List<Pokemon> ebench, bool gamend, bool playerwins,
         List<Pokemon> hand, List<Pokemon> enemyhand, List<Pokemon> decklist, List<Pokemon> enemylist,
         int pcardsleft, int ecardsleft, bool decklocked)
@@ -41,41 +41,45 @@ namespace pokemontcg
             if (pactivepokemon.hp <= 0 && pbench.Count >0)
             {
                 epoints++;
-                while (pactivepokemon.hp <= 0)
+                if (pbench.Count > 0)
                 {
-                    Console.WriteLine("your pokemon has died. please select a pokemon from your bench.");
-                    Console.Write("Bench: ");
-                    for (int i = 0; i < 3; i++)
+                    while (pactivepokemon.hp <= 0)
                     {
-                        if (i < pbench.Count && pbench[i] != null)
-                            Console.Write(pbench[i].name);
-                        else
-                            Console.Write("---");
-                        if (i < 2) Console.Write(", ");
-                    }
-                    Console.WriteLine();
-                    string input = Console.ReadLine();
-                    if (input == "0" && pbench.Count >= 1)
-                    {
-                        pbench[0] = pactivepokemon;
-                        pbench.RemoveAt(0);
-                    }
-                    if (input == "1" && pbench.Count >= 2)
-                    {
-                        pbench[1] = pactivepokemon;
-                        pbench.RemoveAt(1);
-                    }
-                    if (input == "2" && pbench.Count >= 3)
-                    {
-                        pbench[2] = pactivepokemon;
-                        pbench.RemoveAt(2);
+                        Console.WriteLine("your pokemon has died. please select a pokemon from your bench.");
+                        Console.Write("Bench: ");
+                        for (int i = 0; i < 3; i++)
+                        {
+                            if (i < pbench.Count && pbench[i] != null)
+                                Console.Write(pbench[i].name);
+                            else
+                                Console.Write("---");
+                            if (i < 2) Console.Write(", ");
+                        }
+                        Console.WriteLine();
+                        string input = Console.ReadLine();
+                        if (input == "0" && pbench.Count >= 1)
+                        {
+                            pactivepokemon = pbench[0];
+                            pbench.RemoveAt(0);
+                        }
+                        else if (input == "1" && pbench.Count >= 2)
+                        {
+                            pactivepokemon = pbench[1];
+                            pbench.RemoveAt(1);
+                        }
+                        else if (input == "2" && pbench.Count >= 3)
+                        {
+                            pactivepokemon = pbench[2];
+                            pbench.RemoveAt(2);
+                        }
                     }
                 }
-            }
-            else
-            {
-                gamend = true;
-                playerwins = false;
+                else
+                {
+                        pactivepokemon = null;
+                        gamend = true;
+                        playerwins = false;
+                }
             }
             if (ppoints >= 3)
             {
@@ -85,7 +89,8 @@ namespace pokemontcg
                     string yn = Console.ReadLine();
                     if (yn == "Y" || yn == "y")
                     {
-                        //reset();
+                        ResetGame(ref ppoints, ref epoints, ref pcardsleft, ref ecardsleft, ref decklocked, ref playerwins, ref gamend,
+                            hand, enemyhand, pbench, ebench, decklist, enemylist, ref pactivepokemon, ref eactivepokemon);
                     }
                     else if (yn == "N" || yn == "N")
                     {
@@ -98,8 +103,9 @@ namespace pokemontcg
                 }
             }
             //enemy logic
-            if (eactivepokemon.hp <= 0 && ebench.Count > 0)
+            if (eactivepokemon != null && eactivepokemon.hp <= 0 && ebench.Count > 0)
             {
+                //active pokemon is dead,so we need to remove him and award points
                 ppoints++;
                 if (ebench.Count > 0)
                 {
@@ -117,8 +123,14 @@ namespace pokemontcg
                         }
                     }
                 }
+                else
+                {
+                    eactivepokemon = null;
+                    gamend = true;
+                    playerwins = true;
+                }
             }
-            else
+            else if (eactivepokemon == null)
             {
                 gamend = true;
                 playerwins = true;
@@ -131,7 +143,7 @@ namespace pokemontcg
                     string yn = Console.ReadLine();
                     if (yn == "Y" || yn == "y")
                     {
-                        ResetGame(ref ppoints, ref epoints, ref pcardsleft, ref ecardsleft, ref decklocked, ref playerwins, ref gamend, 
+                        ResetGame(ref ppoints, ref epoints, ref pcardsleft, ref ecardsleft, ref decklocked, ref playerwins, ref gamend,
                             hand, enemyhand, pbench, ebench, decklist, enemylist, ref pactivepokemon, ref eactivepokemon);
                     }
                     else if (yn == "N" || yn == "N")
@@ -143,6 +155,16 @@ namespace pokemontcg
                         Console.WriteLine("only put in Y or N.");
                     }
                 }
+            }
+            if (eactivepokemon == null)
+            {
+                gamend = true;
+                playerwins = true;
+            }
+            else if (pactivepokemon == null)
+            {
+                gamend = true;
+                playerwins = false;
             }
         }
         static void ResetGame(ref int ppoints,ref int epoints,ref int pcardsleft,ref int ecardsleft,ref bool decklocked,ref bool playerwins,
@@ -204,7 +226,7 @@ namespace pokemontcg
             }
         }
         static void writescreen(List<Pokemon> enemyhand, int epoints, List<Pokemon> ebench, Pokemon eactivepokemon,
-            Pokemon pactivepoemon, List<Pokemon> hand, List<Pokemon> pbench, int ppoints) // todo make screenwrite
+            Pokemon pactivepoemon, List<Pokemon> hand, List<Pokemon> pbench, int ppoints, int energyleft) // todo make screenwrite
         {
             Console.Clear();
             Console.WriteLine("Enemy Hand: " + enemyhand.Count + "    Points:" + epoints);
@@ -236,7 +258,7 @@ namespace pokemontcg
                 if (i < 2) Console.Write(", ");
             }
             Console.WriteLine();
-            Console.WriteLine("Your Hand: " + hand.Count + "    Points:" + ppoints);
+            Console.WriteLine("Your Hand: " + hand.Count + "    Points:" + ppoints + " energy to attach: " + energyleft);
             Console.WriteLine("Hand     Bench     Active     End Turn     Energy");
             Console.WriteLine("1        2         3          4            5");
         }
@@ -313,7 +335,7 @@ namespace pokemontcg
                 attackdata slash = new attackdata("slash", 40, "none", 2);
                 attackdata leaf_step = new attackdata("leaf step", 80, "none", 2);
                 attackdata fighting_claws = new attackdata("fighting claws", 60, "if the active enemy is an EX, this does 70 more damage", 2);
-                attackdata anchor = new attackdata("anchor", 80, "none", 3);
+                attackdata anchor = new attackdata("anchor", 80, "none", 2);
                 attackdata horn_throw = new attackdata("horn throw", 90, "none", 3);
                 attackdata claws = new attackdata("claws", 60, "none", 3);
                 attackdata crimson_storm = new attackdata("crimson storm", 200, "none", 4);
@@ -325,26 +347,26 @@ namespace pokemontcg
                 attackdata blizzard = new attackdata("blizzard", 100, "none", 3);
                 attackdata whirlpool = new attackdata("whirlpool", 140, "none", 4);
 
-                Pokemon scyther = new Pokemon("scyther", "grass", 70, 1, "fire", 0, 0, sharp_scythe, "none");
-                Pokemon oddish1 = new Pokemon("oddish", "grass", 60, 1, "fire", 0, 0, ram, "none");
-                Pokemon oddish2 = new Pokemon("oddish", "grass", 60, 1, "fire", 0, 0, blot, "none");
-                Pokemon gloom = new Pokemon("gloom", "grass", 80, 2, "fire", 1, 0, sharp_scythe, "oddish");
-                Pokemon gloom2 = new Pokemon("gloom", "grass", 80, 2, "fire", 1, 0, sharp_scythe, "oddish");
-                Pokemon bellossom = new Pokemon("bellossom", "grass", 130, 1, "fire", 2, 0, sharp_scythe, "gloom");
-                Pokemon bellossom2 = new Pokemon("bellossom", "grass", 130, 1, "fire", 2, 0, sharp_scythe, "gloom");
-                Pokemon combee = new Pokemon("combee", "grass", 50, 1, "fire", 0, 0, ram, "none");
-                Pokemon combee2 = new Pokemon("combee", "grass", 50, 1, "fire", 0, 0, ram, "none");
-                Pokemon vespiquen = new Pokemon("vespiquen", "grass", 100, 2, "fire", 1, 0, leaf_step, "combee");
-                Pokemon sprigatito = new Pokemon("sprigatito", "grass", 60, 1, "fire", 0, 0, ram, "none");
-                Pokemon sprigatito2 = new Pokemon("sprigatito", "grass", 60, 1, "fire", 0, 0, ram, "none");
-                Pokemon floragato = new Pokemon("floragato", "grass", 90, 1, "fire", 1, 0, slash, "sprigatito");
-                Pokemon floragato2 = new Pokemon("floragato", "grass", 90, 1, "fire", 1, 0, slash, "sprigatito");
-                Pokemon meowscarada = new Pokemon("meowscarada", "grass", 140, 1, "fire", 2, 0, fighting_claws, "floragato");
-                Pokemon meowscarada2 = new Pokemon("meowscarada", "grass", 140, 1, "fire", 2, 0, fighting_claws, "floragato");
-                Pokemon dhelmise_EX = new Pokemon("dhelmise EX", "grass", 140, 2, "fire", 0, 0, anchor, "none");
-                Pokemon dhelmise_EX2 = new Pokemon("dhelmise EX", "grass", 140, 2, "fire", 0, 0, anchor, "none");
-                Pokemon heracross = new Pokemon("heracross", "grass", 100, 2, "fire", 0, 0, horn_throw, "none");
-                Pokemon heracross2 = new Pokemon("heracross", "grass", 100, 2, "fire", 0, 0, horn_throw, "none");
+                Pokemon scyther = new Pokemon("scyther", "grass", 70, 70, 1, "fire", 0, 0, sharp_scythe, "none");
+                Pokemon oddish1 = new Pokemon("oddish", "grass", 60, 60, 1, "fire", 0, 0, ram, "none");
+                Pokemon oddish2 = new Pokemon("oddish", "grass", 60, 60, 1, "fire", 0, 0, blot, "none");
+                Pokemon gloom = new Pokemon("gloom", "grass", 80, 80, 2, "fire", 1, 0, sharp_scythe, "oddish");
+                Pokemon gloom2 = new Pokemon("gloom", "grass", 80, 80, 2, "fire", 1, 0, sharp_scythe, "oddish");
+                Pokemon bellossom = new Pokemon("bellossom", "grass", 130, 130, 1, "fire", 2, 0, anchor, "gloom");
+                Pokemon bellossom2 = new Pokemon("bellossom", "grass", 130, 130, 1, "fire", 2, 0, anchor, "gloom");
+                Pokemon combee = new Pokemon("combee", "grass", 50, 50, 1, "fire", 0, 0, ram, "none");
+                Pokemon combee2 = new Pokemon("combee", "grass", 50, 50, 1, "fire", 0, 0, ram, "none");
+                Pokemon vespiquen = new Pokemon("vespiquen", "grass", 100, 100, 2, "fire", 1, 0, leaf_step, "combee");
+                Pokemon sprigatito = new Pokemon("sprigatito", "grass", 60, 60, 1, "fire", 0, 0, ram, "none");
+                Pokemon sprigatito2 = new Pokemon("sprigatito", "grass", 60, 60, 1, "fire", 0, 0, ram, "none");
+                Pokemon floragato = new Pokemon("floragato", "grass", 90, 90, 1, "fire", 1, 0, slash, "sprigatito");
+                Pokemon floragato2 = new Pokemon("floragato", "grass", 90, 90, 1, "fire", 1, 0, slash, "sprigatito");
+                Pokemon meowscarada = new Pokemon("meowscarada", "grass", 140, 140, 1, "fire", 2, 0, fighting_claws, "floragato");
+                Pokemon meowscarada2 = new Pokemon("meowscarada", "grass", 140, 140, 1, "fire", 2, 0, fighting_claws, "floragato");
+                Pokemon dhelmise_EX = new Pokemon("dhelmise EX", "grass", 140, 140, 2, "fire", 0, 0, anchor, "none");
+                Pokemon dhelmise_EX2 = new Pokemon("dhelmise EX", "grass", 140, 140, 2, "fire", 0, 0, anchor, "none");
+                Pokemon heracross = new Pokemon("heracross", "grass", 100, 100, 2, "fire", 0, 0, horn_throw, "none");
+                Pokemon heracross2 = new Pokemon("heracross", "grass", 100, 100, 2, "fire", 0, 0, horn_throw, "none");
                 grassdeck.Add(scyther);
                 grassdeck.Add(oddish1);
                 grassdeck.Add(oddish2);
@@ -366,26 +388,26 @@ namespace pokemontcg
                 grassdeck.Add(heracross);
                 grassdeck.Add(heracross2);
 
-                Pokemon charmander1 = new Pokemon("charmander", "fire", 60, 1, "water", 0, 0, ram, "none");
-                Pokemon charmander2 = new Pokemon("charmander", "fire", 60, 1, "water", 0, 0, ram, "none");
-                Pokemon charmeleon1 = new Pokemon("charmeleon", "fire", 90, 2, "water", 1, 0, claws, "charmander");
-                Pokemon charmeleon2 = new Pokemon("charmeleon", "fire", 90, 2, "water", 1, 0, claws, "charmander");
-                Pokemon charizard_EX1 = new Pokemon("charizard EX", "fire", 180, 2, "water", 2, 0, crimson_storm, "charmeleon");
-                Pokemon charizard_EX2 = new Pokemon("charizard EX", "fire", 180, 2, "water", 2, 0, crimson_storm, "charmeleon");
-                Pokemon heatmor1 = new Pokemon("heatmor", "fire", 80, 1, "water", 0, 0, sharp_scythe, "none");
-                Pokemon heatmor2 = new Pokemon("heatmor", "fire", 80, 1, "water", 0, 0, sharp_scythe, "none");
-                Pokemon houndour1 = new Pokemon("houndour", "fire", 60, 1, "water", 0, 0, ram, "none");
-                Pokemon houndour2 = new Pokemon("houndour", "fire", 60, 1, "water", 0, 0, ram, "none");
-                Pokemon houndoom1 = new Pokemon("houndoom", "fire", 100, 2, "water", 1, 0, corner, "houndour");
-                Pokemon houndoom2 = new Pokemon("houndoom", "fire", 100, 2, "water", 1, 0, corner, "houndour");
-                Pokemon magmar1 = new Pokemon("magmar", "fire", 70, 1, "water", 0, 0, ram, "none");
-                Pokemon magmar2 = new Pokemon("magmar", "fire", 70, 1, "water", 0, 0, ram, "none");
-                Pokemon magmortar1 = new Pokemon("magmortar", "fire", 120, 3, "water", 1, 0, smoke_bomb, "magmar");
-                Pokemon magmortar2 = new Pokemon("magmortar", "fire", 120, 3, "water", 1, 0, smoke_bomb, "magmar");
-                Pokemon fire_tauros1 = new Pokemon("fire tauros", "fire", 110, 2, "water", 0, 0, horn_throw, "none");
-                Pokemon fire_tauros2 = new Pokemon("fire tauros", "fire", 110, 2, "water", 0, 0, horn_throw, "none");
-                Pokemon oricorio = new Pokemon("oricorio", "fire", 70, 1, "water", 0, 0, pound, "none");
-                Pokemon oricorio2 = new Pokemon("oricorio", "fire", 70, 1, "water", 0, 0, pound, "none");
+                Pokemon charmander1 = new Pokemon("charmander", "fire", 60, 60, 1, "water", 0, 0, ram, "none");
+                Pokemon charmander2 = new Pokemon("charmander", "fire", 60, 60, 1, "water", 0, 0, ram, "none");
+                Pokemon charmeleon1 = new Pokemon("charmeleon", "fire", 90, 90, 2, "water", 1, 0, claws, "charmander");
+                Pokemon charmeleon2 = new Pokemon("charmeleon", "fire", 90, 90, 2, "water", 1, 0, claws, "charmander");
+                Pokemon charizard_EX1 = new Pokemon("charizard EX", "fire", 180, 180, 2, "water", 2, 0, crimson_storm, "charmeleon");
+                Pokemon charizard_EX2 = new Pokemon("charizard EX", "fire", 180, 180, 2, "water", 2, 0, crimson_storm, "charmeleon");
+                Pokemon heatmor1 = new Pokemon("heatmor", "fire", 80, 80, 1, "water", 0, 0, sharp_scythe, "none");
+                Pokemon heatmor2 = new Pokemon("heatmor", "fire", 80, 80, 1, "water", 0, 0, sharp_scythe, "none");
+                Pokemon houndour1 = new Pokemon("houndour", "fire", 60, 60, 1, "water", 0, 0, ram, "none");
+                Pokemon houndour2 = new Pokemon("houndour", "fire", 60, 60, 1, "water", 0, 0, ram, "none");
+                Pokemon houndoom1 = new Pokemon("houndoom", "fire", 100, 100, 2, "water", 1, 0, corner, "houndour");
+                Pokemon houndoom2 = new Pokemon("houndoom", "fire", 100, 100, 2, "water", 1, 0, corner, "houndour");
+                Pokemon magmar1 = new Pokemon("magmar", "fire", 70, 70, 1, "water", 0, 0, ram, "none");
+                Pokemon magmar2 = new Pokemon("magmar", "fire", 70, 70, 1, "water", 0, 0, ram, "none");
+                Pokemon magmortar1 = new Pokemon("magmortar", "fire", 120, 120, 3, "water", 1, 0, smoke_bomb, "magmar");
+                Pokemon magmortar2 = new Pokemon("magmortar", "fire", 120, 120, 3, "water", 1, 0, smoke_bomb, "magmar");
+                Pokemon fire_tauros1 = new Pokemon("fire tauros", "fire", 110, 110, 2, "water", 0, 0, horn_throw, "none");
+                Pokemon fire_tauros2 = new Pokemon("fire tauros", "fire", 110, 110, 2, "water", 0, 0, horn_throw, "none");
+                Pokemon oricorio = new Pokemon("oricorio", "fire", 70, 70, 1, "water", 0, 0, pound, "none");
+                Pokemon oricorio2 = new Pokemon("oricorio", "fire", 70, 70, 1, "water", 0, 0, pound, "none");
                 firedeck.Add(charmander1);
                 firedeck.Add(charmander2);
                 firedeck.Add(charmeleon1);
@@ -407,26 +429,26 @@ namespace pokemontcg
                 firedeck.Add(oricorio);
                 firedeck.Add(oricorio2);
 
-                Pokemon staryu1 = new Pokemon("staryu", "water", 50, 1, "grass", 0, 0, ram, "none");
-                Pokemon staryu2 = new Pokemon("staryu", "water", 50, 1, "grass", 0, 0, ram, "none");
-                Pokemon starmie = new Pokemon("starmie", "water", 90, 1, "grass", 1, 0, splash, "staryu");
-                Pokemon starmie_EX = new Pokemon("starmie EX", "water", 130, 0, "grass", 1, 0, hydro_splash, "staryu");
-                Pokemon articuno_EX1 = new Pokemon("articuno EX", "water", 150, 2, "grass", 0, 0, blizzard, "none");
-                Pokemon articuno_EX2 = new Pokemon("articuno EX", "water", 150, 2, "grass", 0, 0, blizzard, "none");
-                Pokemon magikarp = new Pokemon("magikarp", "water", 30, 1, "grass", 0, 0, ram, "none");
-                Pokemon gyarados_EX = new Pokemon("gyarados EX", "water", 180, 3, "grass", 1, 0, whirlpool, "magikarp");
-                Pokemon buizel1 = new Pokemon("buizel", "water", 60, 1, "grass", 0, 0, ram, "none");
-                Pokemon buizel2 = new Pokemon("buizel", "water", 60, 1, "grass", 0, 0, ram, "none");
-                Pokemon floatzel1 = new Pokemon("floatzel", "water", 90, 1, "grass", 1, 0, sharp_scythe, "buizel");
-                Pokemon floatzel2 = new Pokemon("floatzel", "water", 90, 1, "grass", 1, 0, sharp_scythe, "buizel");
-                Pokemon tentacool1 = new Pokemon("tentacool", "water", 70, 1, "grass", 0, 0, ram, "none");
-                Pokemon tentacool2 = new Pokemon("tentacool", "water", 70, 1, "grass", 0, 0, ram, "none");
-                Pokemon tentacruel1 = new Pokemon("tentacruel", "water", 100, 1, "grass", 1, 0, splash, "tentacool");
-                Pokemon tentacruel2 = new Pokemon("tentacruel", "water", 100, 1, "grass", 1, 0, splash, "tentacool");
-                Pokemon bruxish1 = new Pokemon("bruxish", "water", 80, 1, "grass", 0, 0, pound, "none");
-                Pokemon bruxish2 = new Pokemon("bruxish", "water", 80, 1, "grass", 0, 0, pound, "none");
-                Pokemon lapras1 = new Pokemon("lapras", "water", 110, 2, "grass", 0, 0, smoke_bomb, "none");
-                Pokemon lapras2 = new Pokemon("lapras", "water", 110, 2, "grass", 0, 0, smoke_bomb, "none");
+                Pokemon staryu1 = new Pokemon("staryu", "water", 50, 50, 1, "grass", 0, 0, ram, "none");
+                Pokemon staryu2 = new Pokemon("staryu", "water", 50, 50, 1, "grass", 0, 0, ram, "none");
+                Pokemon starmie = new Pokemon("starmie", "water", 90, 90, 1, "grass", 1, 0, splash, "staryu");
+                Pokemon starmie_EX = new Pokemon("starmie EX", "water", 130, 130, 0, "grass", 1, 0, hydro_splash, "staryu");
+                Pokemon articuno_EX1 = new Pokemon("articuno EX", "water", 150, 150, 2, "grass", 0, 0, blizzard, "none");
+                Pokemon articuno_EX2 = new Pokemon("articuno EX", "water", 150, 150, 2, "grass", 0, 0, blizzard, "none");
+                Pokemon magikarp = new Pokemon("magikarp", "water", 30, 30, 1, "grass", 0, 0, ram, "none");
+                Pokemon gyarados_EX = new Pokemon("gyarados EX", "water", 180, 180, 3, "grass", 1, 0, whirlpool, "magikarp");
+                Pokemon buizel1 = new Pokemon("buizel", "water", 60, 60, 1, "grass", 0, 0, ram, "none");
+                Pokemon buizel2 = new Pokemon("buizel", "water", 60, 60, 1, "grass", 0, 0, ram, "none");
+                Pokemon floatzel1 = new Pokemon("floatzel", "water", 90, 90, 1, "grass", 1, 0, sharp_scythe, "buizel");
+                Pokemon floatzel2 = new Pokemon("floatzel", "water", 90, 90, 1, "grass", 1, 0, sharp_scythe, "buizel");
+                Pokemon tentacool1 = new Pokemon("tentacool", "water", 70, 70, 1, "grass", 0, 0, ram, "none");
+                Pokemon tentacool2 = new Pokemon("tentacool", "water", 70, 70, 1, "grass", 0, 0, ram, "none");
+                Pokemon tentacruel1 = new Pokemon("tentacruel", "water", 100, 100, 1, "grass", 1, 0, splash, "tentacool");
+                Pokemon tentacruel2 = new Pokemon("tentacruel", "water", 100, 100, 1, "grass", 1, 0, splash, "tentacool");
+                Pokemon bruxish1 = new Pokemon("bruxish", "water", 80, 80, 1, "grass", 0, 0, pound, "none");
+                Pokemon bruxish2 = new Pokemon("bruxish", "water", 80, 80, 1, "grass", 0, 0, pound, "none");
+                Pokemon lapras1 = new Pokemon("lapras", "water", 110, 110, 2, "grass", 0, 0, smoke_bomb, "none");
+                Pokemon lapras2 = new Pokemon("lapras", "water", 110, 110, 2, "grass", 0, 0, smoke_bomb, "none");
                 waterdeck.Add(staryu1);
                 waterdeck.Add(staryu2);
                 waterdeck.Add(starmie);
@@ -791,7 +813,7 @@ namespace pokemontcg
                     int energyleft = 1;
                     while (playerturn == true) //player turn
                     {
-                        writescreen(enemyhand, epoints, ebench, eactivepokemon, pactivepokemon, hand, pbench, ppoints);
+                        writescreen(enemyhand, epoints, ebench, eactivepokemon, pactivepokemon, hand, pbench, ppoints, energyleft);
                         string input = Console.ReadLine();
                         if (input == "1") //hand
                         {
@@ -824,20 +846,24 @@ namespace pokemontcg
                                         {
                                             if (pactivepokemon.stage == 0 && hand[iinput].evolvesfrom == pactivepokemon.name)
                                             {
-                                                int energyon = eactivepokemon.energy;
+                                                int energyon = pactivepokemon.energy;
+                                                int damage = pactivepokemon.maxhp - pactivepokemon.hp;
                                                 pactivepokemon = hand[iinput];
                                                 hand.RemoveAt(iinput);
                                                 pactivepokemon.energy = energyon;
+                                                pactivepokemon.hp = pactivepokemon.hp - damage;
                                                 break; // keeps from evolving 2 of the same card with one higher stage
                                             }
                                             for (int j = 0; j < pbench.Count; j++)
                                             {
                                                 if (pbench[j].stage == 0 && hand[iinput].evolvesfrom == pbench[j].name)
                                                 {
-                                                    int energyon = eactivepokemon.energy;
+                                                    int energyon = pbench[j].energy;
+                                                    int damage = pbench[j].maxhp - pbench[j].hp;
                                                     pbench[j] = hand[iinput];
                                                     hand.RemoveAt(iinput);
-                                                    pactivepokemon.energy = energyon;
+                                                    pbench[j].energy = energyon;
+                                                    pbench[j].hp = pbench[j].hp - damage;
                                                     break; // keeps from evolving 2 of the same card with one higher stage
                                                 }
                                             }
@@ -846,20 +872,24 @@ namespace pokemontcg
                                         {
                                             if (pactivepokemon.stage == 1 && hand[iinput].evolvesfrom == pactivepokemon.name)
                                             {
-                                                int energyon = eactivepokemon.energy;
+                                                int energyon = pactivepokemon.energy;
+                                                int damage = pactivepokemon.maxhp - pactivepokemon.hp;
                                                 pactivepokemon = hand[iinput];
                                                 hand.RemoveAt(iinput);
                                                 pactivepokemon.energy = energyon;
+                                                pactivepokemon.hp = pactivepokemon.hp - damage;
                                                 break; // keeps from evolving 2 of the same card with one higher stage
                                             }
                                             for (int j = 0; j < pbench.Count; j++)
                                             {
                                                 if (pbench[j].stage == 1 && hand[iinput].evolvesfrom == pbench[j].name)
                                                 {
-                                                    int energyon = eactivepokemon.energy;
+                                                    int energyon = pbench[j].energy;
+                                                    int damage = pbench[j].maxhp - pbench[j].hp;
                                                     pbench[j] = hand[iinput];
                                                     hand.RemoveAt(iinput);
-                                                    pactivepokemon.energy = energyon;
+                                                    pbench[j].energy = energyon;
+                                                    pbench[j].hp = pbench[j].hp - damage;
                                                     break; // keeps from evolving 2 of the same card with one higher stage
                                                 }
                                             }
@@ -1030,12 +1060,13 @@ namespace pokemontcg
                                             if (intput < pbench.Count)
                                             {
                                                 Console.WriteLine("attach energy to this pokemon? Y/N");
-                                                Console.Write(pbench[intput].name + "    damage: " + pbench[intput].atkdata.damage + ", cost: " + pbench[intput].atkdata.energycost + ", energy: " + pbench[intput].energy);
+                                                Console.Write(pbench[intput].name + "    damage: " + pbench[intput].atkdata.damage + ", cost: " + pbench[intput].atkdata.energycost + ", energy: " + pbench[intput].energy + ", effect:" + pbench[intput].atkdata.effect );
                                             }
                                             string attachoice = Console.ReadLine();
                                             if (attachoice == "Y" || attachoice == "y")
                                             {
                                                 pbench[intput].energy++;
+                                                energyleft = 0;
                                             }
                                             else if (attachoice == "N" || attachoice == "n")
                                             {}
@@ -1064,61 +1095,107 @@ namespace pokemontcg
                             Console.WriteLine("please put in 1 through 5.");
                             char whyexistatall = Console.ReadKey().KeyChar;
                         }
-                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
+                        check(ref pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                     }
-                    check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
+                    check(ref pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                     while (!playerturn) //enemy turn
                     {
-                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
+                        check(ref pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                         cardrawer = rng.Next(ecardsleft);
                         enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                         cardrawer = rng.Next(ecardsleft);
                         removenulls(enemyhand, hand);
-                        for (int i = enemyhand.Count-1; i >= 0; i--) // hand procedure to play basics
+                        for (int i = enemyhand.Count - 1; i >= 0; i--) // hand procedure to play basics
                         {
-                            if (enemyhand[i].stage == 0)
+
+                            if (enemyhand.Count > 0)
                             {
-                                if (ebench.Count < 3)
+                                if (enemyhand[i].stage == 0)
                                 {
-                                    ebench.Add(enemyhand[i]);
-                                    enemyhand.RemoveAt(i);
-                                }
-                            }
-                            else if (enemyhand[i].stage == 1) //evolve logic
-                            {
-                                for (int j = 0; j < ebench.Count; j++)
-                                {
-                                    if (eactivepokemon.stage == 0 && hand[iinput].evolvesfrom == pactivepokemon.name)
-                                    {
-                                        int energyon = eactivepokemon.energy;
-                                        pactivepokemon = hand[iinput];
-                                        hand.RemoveAt(iinput);
-                                        pactivepokemon.energy = energyon;
-                                        break; // keeps from evolving 2 of the same card with one higher stage
-                                    }
-                                    for (int  = 0; j < pbench.Count; j++)
-                                    {
-                                        if (pbench[j].stage == 0 && hand[iinput].evolvesfrom == pbench[j].name)
-                                        {
-                                            int energyon = eactivepokemon.energy;
-                                            pbench[j] = hand[iinput];
-                                            hand.RemoveAt(iinput);
-                                            pactivepokemon.energy = energyon;
-                                            break; // keeps from evolving 2 of the same card with one higher stage
-                                        }
-                                    }
-                                }
-                            }
-                            else if (enemyhand[i].stage == 2)
-                            {
-                                for (int j = 0; j < ebench.Count; j++)
-                                {
-                                    if (ebench[j].stage == 1 && enemyhand[i].evolvesfrom == ebench[j].name)
+                                    if (ebench.Count < 3) //if the bench has room, add a card
                                     {
                                         ebench.Add(enemyhand[i]);
                                         enemyhand.RemoveAt(i);
-                                        ebench.RemoveAt(j);
-                                        break; // keeps from evolving 2 of the same card with one higher stage
+                                    }
+                                }
+                                else if (enemyhand[i].stage == 1) //evolve logic basic to 1
+                                {
+                                    bool cardplayed= false;
+                                    for (int j = 0; j < ebench.Count; j++)
+                                    {
+                                        for (int h = 0; h < enemyhand.Count; h++)
+                                        {
+                                            if (eactivepokemon.stage == 0 && enemyhand[h].evolvesfrom == eactivepokemon.name)
+                                            {
+                                                int energyon = eactivepokemon.energy;
+                                                int damage = eactivepokemon.maxhp - eactivepokemon.hp;
+                                                eactivepokemon = enemyhand[h];
+                                                enemyhand.RemoveAt(h);
+                                                eactivepokemon.energy = energyon;
+                                                eactivepokemon.hp = eactivepokemon.hp - damage;
+                                                cardplayed = true;
+                                                break;
+                                            }
+                                        }
+                                        if (cardplayed)
+                                        {
+                                            break;
+                                        }
+                                        for (int h = 0; h < enemyhand.Count; h++)
+                                        {
+                                            if (ebench[j].stage == 0 && enemyhand[h].evolvesfrom == ebench[j].name)
+                                            {
+                                                int energyon = ebench[j].energy;
+                                                int damage = ebench[j].maxhp - ebench[j].hp;
+                                                ebench[j] = enemyhand[h];
+                                                enemyhand.RemoveAt(h);
+                                                ebench[j].energy = energyon;
+                                                ebench[j].hp = ebench[j].hp - damage;
+                                                break;
+                                            }
+                                        }
+                                        for (int h = 0; h < enemyhand.Count; h++)
+                                        {
+                                            if (eactivepokemon.stage == 1 && enemyhand[h].evolvesfrom == eactivepokemon.name)
+                                            {
+                                                int energyon = eactivepokemon.energy;
+                                                int damage = eactivepokemon.maxhp - eactivepokemon.hp;
+                                                eactivepokemon = enemyhand[h];
+                                                enemyhand.RemoveAt(h);
+                                                eactivepokemon.energy = energyon;
+                                                eactivepokemon.hp = eactivepokemon.hp - damage;
+                                                break; // keeps from evolving 2 of the same card with one higher stage
+                                            }
+                                        }
+                                        for (int h = 0; h < enemyhand.Count; h++)
+                                        {
+                                            if (ebench[j].stage == 1 && enemyhand[h].evolvesfrom == ebench[j].name)
+                                            {
+                                                int energyon = ebench[j].energy;
+                                                int damage = ebench[j].maxhp - ebench[j].hp;
+                                                ebench[j] = enemyhand[h];
+                                                enemyhand.RemoveAt(h);
+                                                ebench[j].energy = energyon;
+                                                ebench[j].hp = ebench[j].hp - damage;
+                                                break; // keeps from evolving 2 of the same card with one higher stage
+                                            }
+                                        }
+                                    }
+                                }
+                                else if (enemyhand[i].stage == 2) // evolve logic 1 to 2
+                                {
+                                    for (int j = 0; j < ebench.Count; j++)
+                                    {
+                                        if (ebench[j].stage == 1 && enemyhand[i].evolvesfrom == ebench[j].name)
+                                        {
+                                            int energyon = ebench[j].energy;
+                                            int damage = ebench[j].maxhp - ebench[j].hp;
+                                            ebench[j] = enemyhand[i];
+                                            enemyhand.RemoveAt(i);
+                                            ebench[j].energy = energyon;
+                                            ebench[j].hp = ebench[j].hp - damage;
+                                            break; // keeps from evolving 2 of the same card with one higher stage
+                                        }
                                     }
                                 }
                             }
@@ -1139,15 +1216,15 @@ namespace pokemontcg
                         {
                             eactivepokemon.energy++;
                         }
-                        if (eactivepokemon.hp <= pactivepokemon.atkdata.damage && eactivepokemon.energy >= eactivepokemon.retreatcost) // retreat if hp is low
+                        if (eactivepokemon.hp <= pactivepokemon.atkdata.damage && pactivepokemon.energy >= pactivepokemon.atkdata.energycost - 1 && eactivepokemon.energy >= eactivepokemon.retreatcost) // retreat if hp is low
                         {
                             eactivepokemon.energy -= eactivepokemon.retreatcost;
                             Pokemon mosthponbench = Mosthpfinder(ebench);
                             ebench.Add(eactivepokemon);
                             eactivepokemon = mosthponbench;
                         }
-                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
-                        if (eactivepokemon.energy >= eactivepokemon.atkdata.energycost) // attack
+                        check(ref pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
+                        if (eactivepokemon != null && eactivepokemon.energy >= eactivepokemon.atkdata.energycost) // attack
                         {
                             DoAttack(eactivepokemon, pactivepokemon);
                             Console.WriteLine("Enemy attacks and does " + eactivepokemon.atkdata.damage + " damage!");
@@ -1158,9 +1235,41 @@ namespace pokemontcg
                         {
                             playerturn = true;
                         }
-                        check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
+                        check(ref pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                     }
-                    check(pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
+                    check(ref pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
+                }
+                if (playerwins)
+                {
+                    Console.WriteLine("you win! restart? y/n");
+                    char yn = Console.ReadKey().KeyChar;
+                    while (yn != 'y' && yn != 'n')
+                    {
+                        Console.WriteLine("y or n?");
+                    }
+                    if (yn == 'n')
+                    {
+                        Environment.Exit(0);
+                    }
+                    else if (yn == 'y')
+                    {
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("you lose! restart? y/n");
+                    char yn = Console.ReadKey().KeyChar;
+                    while (yn != 'y' && yn != 'n')
+                    {
+                        Console.WriteLine("y or n?");
+                    }
+                    if (yn == 'n')
+                    {
+                        Environment.Exit(0);
+                    }
+                    else if (yn == 'y')
+                    {
+                    }
                 }
             }
         }
