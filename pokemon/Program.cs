@@ -27,16 +27,18 @@ namespace pokemontcg
        5/30        ironing out bugs, glitches, and exceptions
        6/2         working on bugs, adding points, and improving computer smartness
        6/4         evolve and energy attach are done, working on death mechanic
-       6/5         check and reset logic, i should be done pretty soon
+       6/5         check and reset logic, just flattening things out, i should be done pretty soon
+       6/7         so it did end up like wordle, this is taking forever.. flattening bugs, specifically with enemy behavior
+                   because it is on the fritz.
 
      */
     static internal class Program
     {
-        static void check(
+        static void check( //this method handles death and win/loss conditions (partially)
         ref Pokemon pactivepokemon, List<Pokemon> pbench, int ppoints, int epoints,
         Pokemon eactivepokemon, List<Pokemon> ebench, bool gamend, bool playerwins,
         List<Pokemon> hand, List<Pokemon> enemyhand, List<Pokemon> decklist, List<Pokemon> enemylist,
-        int pcardsleft, int ecardsleft, bool decklocked)
+        int pcardsleft, int ecardsleft, bool decklocked, bool playerturn)
         { //player logic
             if (pactivepokemon.hp <= 0 && pbench.Count >0)
             {
@@ -77,6 +79,7 @@ namespace pokemontcg
                 else
                 {
                         pactivepokemon = null;
+                        playerturn = false;
                         gamend = true;
                         playerwins = false;
                 }
@@ -126,12 +129,14 @@ namespace pokemontcg
                 else
                 {
                     eactivepokemon = null;
+                    playerturn = true;
                     gamend = true;
                     playerwins = true;
                 }
             }
             else if (eactivepokemon == null)
             {
+                playerturn = true;
                 gamend = true;
                 playerwins = true;
             }
@@ -158,18 +163,20 @@ namespace pokemontcg
             }
             if (eactivepokemon == null)
             {
+                playerturn = true;
                 gamend = true;
                 playerwins = true;
             }
             else if (pactivepokemon == null)
             {
+                playerturn = true;
                 gamend = true;
                 playerwins = false;
             }
         }
         static void ResetGame(ref int ppoints,ref int epoints,ref int pcardsleft,ref int ecardsleft,ref bool decklocked,ref bool playerwins,
         ref bool gamend,List<Pokemon> hand,List<Pokemon> enemyhand,List<Pokemon> pbench,List<Pokemon> ebench,List<Pokemon> decklist,
-        List<Pokemon> enemylist,ref Pokemon pactivepokemon,ref Pokemon eactivepokemon)
+        List<Pokemon> enemylist,ref Pokemon pactivepokemon,ref Pokemon eactivepokemon) //we will use this to reset the game state (not sure whether i actually need this)
         {
             ppoints = 0;
             epoints = 0;
@@ -186,8 +193,9 @@ namespace pokemontcg
             enemylist.Clear();
             pactivepokemon = null;
             eactivepokemon = null;
+
         }
-        static Pokemon Mosthpfinder(List<Pokemon> ebench)
+        static Pokemon Mosthpfinder(List<Pokemon> ebench) //this finds the most hp on the enemy bench and returns it, to be used for enemy logic 
         {
             Pokemon maxhpmon = null;
             int maxhp = int.MinValue;
@@ -201,7 +209,8 @@ namespace pokemontcg
             }
             return maxhpmon;
         }
-        static void removenulls(List<Pokemon> ehand, List<Pokemon>phand)
+        static void removenulls(List<Pokemon> ehand, List<Pokemon>phand) //this ensures we don't draw nulls,
+        //as draw card can return (which adds to hands) a null, which would break the computer.
         {
             for (int i = phand.Count - 1; i >= 0; i--)
             {
@@ -226,7 +235,8 @@ namespace pokemontcg
             }
         }
         static void writescreen(List<Pokemon> enemyhand, int epoints, List<Pokemon> ebench, Pokemon eactivepokemon,
-            Pokemon pactivepoemon, List<Pokemon> hand, List<Pokemon> pbench, int ppoints, int energyleft) // todo make screenwrite
+            Pokemon pactivepoemon, List<Pokemon> hand, List<Pokemon> pbench, int ppoints, int energyleft) 
+            //this will write our board state, effectively this is the player's visible UI.
         {
             Console.Clear();
             Console.WriteLine("Enemy Hand: " + enemyhand.Count + "    Points:" + epoints);
@@ -262,7 +272,7 @@ namespace pokemontcg
             Console.WriteLine("Hand     Bench     Active     End Turn     Energy");
             Console.WriteLine("1        2         3          4            5");
         }
-        static void DoAttack(Pokemon attackingpokemon, Pokemon enemyactive)
+        static void DoAttack(Pokemon attackingpokemon, Pokemon enemyactive) // this handles attacking 
         {
             enemyactive.hp -= attackingpokemon.atkdata.damage;
             if (attackingpokemon.type == "grass" && enemyactive.type == "water")
@@ -290,6 +300,7 @@ namespace pokemontcg
             }
         }
         private static Pokemon DrawCard(List<Pokemon> refdeck, int cardrawer, Random rng)
+        //this method draws a card from the remaining cards in the deck
         {
             if (refdeck.Count > 0)
             {
@@ -301,7 +312,7 @@ namespace pokemontcg
             }
             else
             {
-                return null;
+                return null; //just trust me on this part.
             }
         }
         static void Main(string[] args)
@@ -803,16 +814,26 @@ namespace pokemontcg
                 cardrawer = rng.Next(ecardsleft);
                 enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
                 cardrawer = rng.Next(ecardsleft);
+
+
                 while (!gamend)
                 {
                     bool playerturn = true;
                     cardrawer = rng.Next(pcardsleft);
                     hand.Add(DrawCard(decklist, cardrawer, rng));
-                    cardrawer = rng.Next(pcardsleft);
+                    cardrawer = rng.Next(pcardsleft); //draws card for player
                     removenulls(enemyhand, hand);
-                    int energyleft = 1;
-                    while (playerturn == true) //player turn
+                    int energyleft = 1; // we use this to control energy flow per turn
+
+
+                    while (playerturn == true && eactivepokemon != null) //player turn
                     {
+                        if (gamend || eactivepokemon == null)
+                        {
+                            gamend = true;
+                            playerwins = true;
+                            break;
+                        }
                         writescreen(enemyhand, epoints, ebench, eactivepokemon, pactivepokemon, hand, pbench, ppoints, energyleft);
                         string input = Console.ReadLine();
                         if (input == "1") //hand
@@ -901,11 +922,6 @@ namespace pokemontcg
                                         }
                                     }
                                 }
-                            }
-                            else
-                            {
-                                Console.WriteLine("select a hand number.");
-                                char whyexistatall = Console.ReadKey().KeyChar;
                             }
                         }
                         else if (input == "2") //bench
@@ -1050,7 +1066,8 @@ namespace pokemontcg
                                         Console.Write(pbench[i].name.PadRight(15));
                                     }
                                     Console.WriteLine();
-                                    Console.WriteLine("Select a character, 0 to 2.");
+                                    int pbenchcountminusone = pbench.Count - 1;
+                                    Console.WriteLine("Select a character, 0 to " + pbenchcountminusone + ".");
                                     input = Console.ReadLine();
                                     int intput = -1;
                                     if (int.TryParse(input, out intput))
@@ -1098,8 +1115,14 @@ namespace pokemontcg
                         check(ref pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                     }
                     check(ref pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
-                    while (!playerturn) //enemy turn
+                    while (!playerturn && eactivepokemon != null) //enemy turn
                     {
+                        if (gamend || eactivepokemon == null)
+                        {
+                            gamend = true;
+                            playerwins = true;
+                            break;
+                        }
                         check(ref pactivepokemon, pbench, ppoints, epoints, eactivepokemon, ebench, gamend, playerwins, hand, enemyhand, decklist, enemylist, pcardsleft, ecardsleft, decklocked);
                         cardrawer = rng.Next(ecardsleft);
                         enemyhand.Add(DrawCard(enemylist, cardrawer, rng));
@@ -1246,6 +1269,7 @@ namespace pokemontcg
                     while (yn != 'y' && yn != 'n')
                     {
                         Console.WriteLine("y or n?");
+                        yn = Console.ReadKey().KeyChar;
                     }
                     if (yn == 'n')
                     {
@@ -1262,6 +1286,7 @@ namespace pokemontcg
                     while (yn != 'y' && yn != 'n')
                     {
                         Console.WriteLine("y or n?");
+                        yn = Console.ReadKey().KeyChar;
                     }
                     if (yn == 'n')
                     {
