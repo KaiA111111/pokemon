@@ -87,6 +87,7 @@ namespace pokemontcg
                         playerwins = false;
                 }
             }
+
             if (ppoints >= 3)
             {
                 while (ppoints >= 3)
