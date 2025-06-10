@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.IO;
 
 namespace pokemontcg
 {
@@ -32,7 +33,8 @@ namespace pokemontcg
        6/7         so it did end up like wordle, this is taking forever.. flattening bugs, specifically with enemy behavior
                    because it is on the fritz.
        6/8         fixing some last index bugs, (theres been a lot) i should be done today.
-                   IM DONE YES OMG THIS TOOK SO LONG!! I'M FREE!!! im never doing a computer enemy again..
+                   IM DONE YES OMG THIS TOOK SO LONG!! I'M FREE!!! im never doing a computer enemy again.. now i just need to add files to this somehow
+       6/9         idk how i forgot to add files im adding it today, im actually done now
 
      */
     static internal class Program
@@ -331,6 +333,7 @@ namespace pokemontcg
                 List<Pokemon> grassdeck = new List<Pokemon>();
                 List<Pokemon> firedeck = new List<Pokemon>();
                 List<Pokemon> waterdeck = new List<Pokemon>();
+                List<Pokemon> filelist = new List<Pokemon>();
                 string deckelemental = "";
                 bool decklocked = false;
                 bool playerwins = false;
@@ -485,12 +488,20 @@ namespace pokemontcg
                 waterdeck.Add(lapras1);
                 waterdeck.Add(lapras2);
 
+                for (int indexer = 0; indexer <= 19; indexer++)
+                {
+                    filelist.Add(waterdeck[indexer]);
+                    filelist.Add(firedeck[indexer]);
+                    filelist.Add(grassdeck[indexer]);
+                }
+
                 bool deckchosen = false;
                 while (deckchosen == false)
                 {
                     Console.WriteLine("Choose your deck.");
                     Console.WriteLine("Grass Deck       Fire Deck       Water Deck");
                     Console.WriteLine("'grass'          'fire'          'water'");
+                    Console.WriteLine("press 1 to make your own deck, or 2 to load from file.");
                     string input = Console.ReadLine();
                     if (input == "grass")
                     {
@@ -573,6 +584,82 @@ namespace pokemontcg
                         deckelemental = "water";
                         deckelement = 3;
                     }
+                    else if (input == "1")
+                    {
+                        List<Pokemon> filewriterdeck = new List<Pokemon>();
+                        while (filewriterdeck.Count < 20)
+                        {
+                            Console.Clear();
+                            Console.WriteLine("select 20 pokemon from the list.");
+                            Console.WriteLine();
+                            for (int indexer = 0; indexer < filelist.Count; indexer++)
+                            {
+                                Console.Write(indexer + " ");
+                                Console.WriteLine(filelist[indexer].name);
+                            }
+                            Console.WriteLine("your deck: ");
+                            for (int playerlist = 0; playerlist < filewriterdeck.Count; playerlist++)
+                            {
+                                Console.WriteLine(filewriterdeck[playerlist].name);
+                            }
+                            string chosen = Console.ReadLine();
+                            int chosint = -120;
+                            if (int.TryParse(chosen, out chosint))
+                            {
+                                if (chosint >= 0 && chosint < filelist.Count)
+                                {
+                                    filewriterdeck.Add(filelist[chosint]);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("input a number 0 through ", filelist.Count - 1);
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("input a number 0 through ", filelist.Count - 1);
+                            }
+                        }
+                        try
+                        {
+                            StreamWriter writer = new StreamWriter("../../../savedeck.txt");
+                            for (int i = 0; i < filewriterdeck.Count; i++)
+                            {
+                                writer.WriteLine(filewriterdeck[i].name);
+                            }
+                            writer.Close();
+                        }
+                        catch
+                        {
+                            Console.WriteLine("nosotros explodamos :shrug:");
+                        }
+                    }
+                    else if (input == "2")
+                    {
+                        try
+                        {
+                            StreamReader reader = new StreamReader("../../../savedeck.txt");
+                            Console.WriteLine("your saved deck:");
+                            string readline;
+                            while ((readline = reader.ReadLine()) != null)
+                            {
+                                for (int filelistdexer = 0; filelistdexer < filelist.Count; filelistdexer++)
+                                {
+                                    if (readline == filelist[filelistdexer].name)
+                                    {
+                                        decklist.Add(filelist[filelistdexer]);
+                                    }
+                                }
+                                Console.WriteLine(readline);
+                            }
+                            reader.Close();
+                            deckchosen = true;
+                        }
+                        catch
+                        {
+                            Console.WriteLine("no deck on file.");
+                        }
+                    }
                     else
                     {
                         Console.WriteLine("please input either grass, fire, or water. ");
@@ -591,7 +678,7 @@ namespace pokemontcg
                         Console.Write(decklist[i].name);
                     }
                     Console.WriteLine("");
-                }
+                } 
                 */
                 while (decklocked == false)
                 {
@@ -686,11 +773,11 @@ namespace pokemontcg
                         {
                             decklist = grassdeck;
                         }
-                        if (deckelemental == "fire")
+                        else if (deckelemental == "fire")
                         {
                             decklist = firedeck;
                         }
-                        if (deckelemental == "water")
+                        else if (deckelemental == "water")
                         {
                             decklist = waterdeck;
                         }
@@ -1305,7 +1392,7 @@ namespace pokemontcg
                         yn = Console.ReadKey().KeyChar;
                     }
                     if (yn == 'n')
-                    {
+                    { 
                         Environment.Exit(0);
                     }
                 }
