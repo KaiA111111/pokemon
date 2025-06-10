@@ -45,7 +45,7 @@ namespace pokemontcg
         List<Pokemon> hand, List<Pokemon> enemyhand, List<Pokemon> decklist, List<Pokemon> enemylist,
         int pcardsleft, int ecardsleft, bool decklocked, ref bool playerturn)
         { //player logic
-            if (pactivepokemon.hp <= 0 && pbench.Count >0)
+            if (pactivepokemon != null && pactivepokemon.hp <= 0 && pbench.Count > 0)
             {
                 epoints++;
                 if (pbench.Count > 0)
@@ -83,11 +83,18 @@ namespace pokemontcg
                 }
                 else
                 {
-                        pactivepokemon = null;
-                        playerturn = false;
-                        gamend = true;
-                        playerwins = false;
+                    pactivepokemon = null;
+                    playerturn = false;
+                    gamend = true;
+                    playerwins = false;
                 }
+            }
+            else if (pactivepokemon != null && pactivepokemon.hp <= 0 && pbench.Count == 0)
+            {
+                pactivepokemon = null;
+                playerturn = false;
+                gamend = true;
+                playerwins = false;
             }
 
             if (ppoints >= 3)
