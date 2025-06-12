@@ -321,7 +321,7 @@ namespace pokemontcg
                 cardrawer = rng.Next(0, refdeck.Count);
                 Pokemon returnmon = refdeck[cardrawer];
                 refdeck.RemoveAt(cardrawer);
-                return returnmon;
+                return returnmon; // returned pokemon is added to a hand and removed from the deck
             }
             else
             {
@@ -965,24 +965,24 @@ namespace pokemontcg
                                         {
                                             if (pactivepokemon.stage == 0 && hand[iinput].evolvesfrom == pactivepokemon.name)
                                             {
-                                                int energyon = pactivepokemon.energy;
-                                                int damage = pactivepokemon.maxhp - pactivepokemon.hp;
-                                                pactivepokemon = hand[iinput];
-                                                hand.RemoveAt(iinput);
-                                                pactivepokemon.energy = energyon;
-                                                pactivepokemon.hp = pactivepokemon.hp - damage;
+                                                int energyon = pactivepokemon.energy; // stores energy
+                                                int damage = pactivepokemon.maxhp - pactivepokemon.hp; // stores damage taken
+                                                pactivepokemon = hand[iinput]; // "evolves" or sets stage up mon to active
+                                                hand.RemoveAt(iinput); // removes card from hand, so we can't spam evolve from one card
+                                                pactivepokemon.energy = energyon; // transfers over energy
+                                                pactivepokemon.hp = pactivepokemon.hp - damage; // transfers over damage
                                                 break; // keeps from evolving 2 of the same card with one higher stage
                                             }
                                             for (int j = 0; j < pbench.Count; j++)
                                             {
                                                 if (pbench[j].stage == 0 && hand[iinput].evolvesfrom == pbench[j].name)
                                                 {
-                                                    int energyon = pbench[j].energy;
-                                                    int damage = pbench[j].maxhp - pbench[j].hp;
-                                                    pbench[j] = hand[iinput];
-                                                    hand.RemoveAt(iinput);
-                                                    pbench[j].energy = energyon;
-                                                    pbench[j].hp = pbench[j].hp - damage;
+                                                    int energyon = pbench[j].energy;// stores energy
+                                                    int damage = pbench[j].maxhp - pbench[j].hp;// stores damage taken
+                                                    pbench[j] = hand[iinput];// "evolves" or sets stage up mon to active
+                                                    hand.RemoveAt(iinput);// removes card from hand, so we can't spam evolve from one card
+                                                    pbench[j].energy = energyon;// transfers over energy
+                                                    pbench[j].hp = pbench[j].hp - damage;// transfers over damage
                                                     break; // keeps from evolving 2 of the same card with one higher stage
                                                 }
                                             }
